@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ╔══════════════════════════════════════════════╗
+       ║  PAGE TITLE — shown in browser tab           ║
+       ╚══════════════════════════════════════════════╝ -->
+  <title>Li Yi-Fan</title>
+
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* ┌─────────────────────────────────────────────────────────────────┐
+       │ GLOBAL COLOURS & SIZES — edit here to restyle the whole page   │
+       └─────────────────────────────────────────────────────────────────┘ */
+    :root {
+      --text:   #111;     /* main text colour */
+      --muted:  #888;     /* secondary text (years, meta info) */
+      --faint:  #c0c0c0;  /* inactive nav links */
+      --border: #e4e4e4;  /* dividing lines */
+      --bg:     #fff;     /* page background */
+      --nav-w:  350px;    /* left sidebar width */
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif; /* ← change font here */
+      font-weight: 400;
+      font-size: 15px;   /* ← base body font size */
+      line-height: 1.85; /* ← line spacing for body text */
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    /* ══════════════════ LEFT SIDEBAR NAV ══════════════════ */
+
+    nav {
+      position: fixed;
+      top: 0; left: 0;
+      width: var(--nav-w);
+      height: 100dvh;
+      padding: 52px 32px; /* ← top/bottom and left/right padding inside sidebar */
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      background: var(--bg);
+      z-index: 10;
+      overflow-y: auto;
+    }
+
+    /* On desktop, nav-header and nav-body are transparent wrappers */
+    .nav-header   { display: contents; }
+    .nav-hamburger { display: none; }
+    .nav-body     { display: contents; }
+
+    .nav-name {
+      font-size: 12px;      /* ← name size at top of sidebar */
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text);
+      margin-bottom: 40px;  /* ← gap between name and nav links */
+      line-height: 1.5;
+      flex-shrink: 0;
+    }
+
+    /* "Work" top-level link */
+    .nav-h1 {
+      display: block;
+      text-decoration: none;
+      font-size: 12px;     /* ← "Work" label size */
+      letter-spacing: 0.04em;
+      color: var(--faint);
+      padding: 5px 0 10px;
+      transition: color 0.15s;
+    }
+    .nav-h1:hover { color: var(--text); }
+    .nav-h1.active { color: var(--text); }
+
+    .nav-l2 { display: flex; flex-direction: column; }
+
+    .nav-trilogy-row { display: flex; align-items: center; }
+
+    /* H2 nav links (work titles in sidebar) */
+    .nav-h2 {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      text-decoration: none;
+      font-size: 13px;     /* ← sidebar work title size */
+      letter-spacing: 0.01em;
+      color: var(--faint);
+      padding: 5px 0;
+      flex: 1;
+      line-height: 1.5;
+      transition: color 0.15s;
+    }
+    .nav-h2:hover { color: var(--text); }
+    .nav-h2.active { color: var(--text); }
+
+    /* ▸ expand button next to Machinima Trilogy */
+    .trilogy-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--faint);
+      font-size: 10px;
+      padding: 5px 0 5px 6px;
+      transition: color 0.15s, transform 0.2s;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .trilogy-toggle:hover { color: var(--text); }
+    .trilogy-toggle.open { transform: rotate(90deg); }
+
+    /* H3 sub-links (the 3 trilogy works) */
+    .nav-l3 {
+      display: flex;
+      flex-direction: column;
+      padding-left: 14px;  /* ← indent amount for sub-items */
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.28s ease;
+    }
+    .nav-l3.open { max-height: 280px; }
+
+    .nav-h3 {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      text-decoration: none;
+      font-size: 12px;     /* ← sidebar sub-item (trilogy works) size */
+      color: var(--faint);
+      padding: 4px 0;
+      line-height: 1.5;
+      transition: color 0.15s;
+    }
+    .nav-h3:hover { color: var(--muted); }
+    .nav-h3.active { color: var(--text); }
+
+    /* Year column in sidebar — fixed width keeps titles aligned */
+    .nav-year {
+      font-size: 11px;    /* ← year number size in sidebar */
+      color: var(--faint);
+      flex-shrink: 0;
+      min-width: 48px;    /* ← increase if years overlap titles */
+      transition: color inherit;
+    }
+    .nav-h2:hover .nav-year,
+    .nav-h2.active .nav-year,
+    .nav-h3:hover .nav-year,
+    .nav-h3.active .nav-year { color: inherit; }
+
+    /* Email at bottom of sidebar */
+    .nav-email {
+      margin-top: auto;
+      padding-top: 28px;
+      font-size: 10px;    /* ← email text size */
+      color: var(--faint);
+      letter-spacing: 0.02em;
+      word-break: break-all;
+      flex-shrink: 0;
+    }
+    .nav-email a { color: inherit; text-decoration: none; }
+    .nav-email a:hover { color: var(--text); }
+
+    /* ══════════════════ MAIN CONTENT AREA ══════════════════ */
+
+    main {
+      margin-left: var(--nav-w);
+      padding: 72px 64px 160px 72px; /* ← content padding: top right bottom left */
+      /* max-width removed — content fills full screen width */
+    }
+
+    /* "Work" section label at top */
+    .label-h1 {
+      font-size: 11px;       /* ← "Work" heading size */
+      font-weight: 400;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 64px;   /* ← gap below "Work" heading */
+    }
+
+    /* "Machinima Trilogy" sub-heading */
+    .label-h2 {
+      font-size: 13px;       /* ← sub-section heading size */
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      color: var(--text);
+      margin-bottom: 32px;
+    }
+
+    /* Machinima Trilogy group wrapper */
+    .trilogy-group {
+      margin-bottom: 80px;   /* ← gap after trilogy section */
+      scroll-margin-top: 52px;
+    }
+
+    /* Artist statement text block */
+    .trilogy-statement {
+      margin-bottom: 72px;
+      display: grid;
+      grid-template-columns: 1fr clamp(220px, 50vw, 720px);
+      column-gap: 48px;
+      align-items: stretch;
+    }
+
+    .trilogy-text {
+      max-width: 700px;
+    }
+
+    .trilogy-statement p {
+      font-size: 15px;       /* ← statement text size */
+      line-height: 1.9;
+      color: #3c3c3c;        /* ← statement text colour */
+      margin-bottom: 22px;   /* ← gap between paragraphs */
+    }
+    .trilogy-statement p:last-child { margin-bottom: 0; }
+
+    /* Left-border indent for the 3 trilogy works */
+    .trilogy-works {
+      border-left: 1px solid var(--border); /* ← remove this line to hide the indent border */
+      padding-left: 36px;    /* ← indent distance from border */
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ══════════════════ INDIVIDUAL WORK ENTRY ══════════════════ */
+
+    .work {
+      padding: 48px 0;       /* ← vertical space between works */
+      border-bottom: 1px solid var(--border); /* ← divider between works; set to "none" to remove */
+      scroll-margin-top: 52px;
+      display: grid;
+      grid-template-columns: 1fr clamp(220px, 50vw, 720px); /* ← adjust 22vw (proportion) and 480px (max) */
+      column-gap: 48px;
+      align-items: stretch;
+    }
+    .work:first-child { padding-top: 0; }
+    .work:last-child { border-bottom: none; }
+
+    .trilogy-works .work {
+      padding: 40px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .trilogy-works .work:first-child { padding-top: 0; border-top: none; }
+    .trilogy-works .work:last-child { border-bottom: none; padding-bottom: 0; }
+
+    /* Work header: year + title row */
+    .work-title-row {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .work-year {
+      font-size: 13px;   /* ← year size in content area */
+      color: var(--muted);
+    }
+
+    .work-title {
+      font-size: 26px;   /* ← work title size */
+      font-weight: 300;
+      font-style: italic;
+      letter-spacing: -0.015em;
+      line-height: 1.25;
+    }
+
+
+    /* Collaborator credit line */
+    .work-collab {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Medium and duration line */
+    .work-meta {
+      font-size: 12px;   /* ← medium/duration text size */
+      color: var(--muted);
+      margin-top: 6px;
+      margin-bottom: 24px; /* ← gap between meta and description */
+      letter-spacing: 0.02em;
+    }
+    .work-meta span + span::before { content: ' · '; }
+
+    /* Main description text */
+    .work-desc {
+      font-size: 15px;   /* ← description body text size */
+      color: #3c3c3c;    /* ← description text colour */
+      line-height: 1.9;
+      max-width: 700px;  /* ← max width of description text column */
+    }
+    .work-desc p { margin-bottom: 18px; }
+    .work-desc p:last-child { margin-bottom: 0; }
+
+    /* External links below each work */
+    .work-link {
+      margin-top: 12px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+    }
+    .work-link a {
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .work-link a:hover { color: var(--text); border-color: var(--text); }
+
+    /* Work image — sits in the right column on desktop */
+    .work-img {
+      grid-column: 2;
+      grid-row: 1 / span 10;
+      width: 100%;          /* fills the grid column — adjust column width on line 240 */
+      height: 100%;         /* stretches to match left column text height */
+      min-height: 160px;    /* ← floor height if text is very short */
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+
+    /* ══════════════════ MOBILE (screen ≤ 800px) ══════════════════ */
+    @media (max-width: 800px) {
+
+      /* Fixed top bar */
+      nav {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%;
+        height: auto;
+        padding: 0;
+        flex-direction: column;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg);
+        overflow: hidden;
+        z-index: 20;
+      }
+
+      /* Name + hamburger row */
+      .nav-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 24px;
+        flex-shrink: 0;
+      }
+
+      .nav-name { margin-bottom: 0; }
+
+      /* Hamburger button */
+      .nav-hamburger {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 5px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        flex-shrink: 0;
+      }
+      .nav-hamburger span {
+        display: block;
+        width: 20px;
+        height: 1.5px;
+        background: var(--text);
+        transition: transform 0.22s ease, opacity 0.22s ease;
+      }
+      .nav-hamburger.open span:nth-child(1) {
+        transform: translateY(6.5px) rotate(45deg);
+      }
+      .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+      .nav-hamburger.open span:nth-child(3) {
+        transform: translateY(-6.5px) rotate(-45deg);
+      }
+
+      /* Collapsible nav body */
+      .nav-body {
+        display: flex !important;
+        flex-direction: column;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.32s ease;
+        padding: 0 24px;
+      }
+      .nav-body.open {
+        max-height: 700px;
+        padding-bottom: 24px;
+      }
+
+      .nav-h1 { padding: 8px 0 4px; }
+
+      .nav-l2 { flex-direction: column; }
+      .nav-h2 { padding: 6px 0; }
+      .nav-h3 { padding: 4px 0; }
+
+      /* Always show trilogy sub-links in mobile menu */
+      .nav-l3 {
+        display: flex !important;
+        max-height: none !important;
+        overflow: visible !important;
+        transition: none;
+        padding-left: 14px;
+      }
+      .trilogy-toggle { display: none; }
+
+      .nav-email {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+      }
+
+      /* Main content clears the fixed header (~68px) */
+      main {
+        margin-left: 0;
+        padding: 80px 24px 80px;
+        max-width: 100%;
+      }
+
+      /* Scroll targets need more offset to clear the taller fixed header */
+      .work, .trilogy-group { scroll-margin-top: 88px; }
+
+      /* Revert trilogy statement to single column on mobile; image above text */
+      .trilogy-statement {
+        display: flex;
+        flex-direction: column;
+      }
+      .trilogy-statement .work-img {
+        order: -1;
+        width: 100%;
+        height: 220px;
+        margin: 0 0 14px 0;
+      }
+
+      /* Revert work layout to single column; image appears in DOM order (between title and meta) */
+      .work {
+        display: block;
+      }
+      .work-img {
+        display: block;
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+        object-position: center;
+        margin: 14px 0;
+      }
+      /* Tighter line spacing on mobile */
+      body { line-height: 1.65; }
+
+      /* Tighter line spacing on mobile */
+      body { line-height: 1.65; }
+
+      /* Slightly smaller title on narrow screens */
+      .work-title { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  LEFT SIDEBAR                                               ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<nav>
+  <!-- Name + hamburger toggle (hamburger only visible on mobile) -->
+  <div class="nav-header">
+    <div class="nav-name">Li<br>Yi-Fan</div>
+    <button class="nav-hamburger" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <!-- Nav links — collapses on mobile, always visible on desktop -->
+  <div class="nav-body">
+
+    <a href="#work" class="nav-h1">Work</a>
+
+    <div class="nav-l2">
+
+      <!-- Machinima Trilogy row — includes expand toggle button -->
+      <div class="nav-trilogy-row">
+        <!-- ← Year and title shown in sidebar; edit text only, keep the span tags -->
+        <a href="#work-machinima" class="nav-h2"><span class="nav-year">2020–26</span>Machinima Trilogy</a>
+        <button class="trilogy-toggle" aria-label="Expand trilogy">&#9656;</button>
+      </div>
+
+      <!-- The 3 trilogy works — hidden until toggle is clicked -->
+      <div class="nav-l3" id="trilogy-l3">
+        <a href="#work-howdoyouturnthison" class="nav-h3"><span class="nav-year">2021</span>howdoyouturnthison</a>
+        <a href="#work-favorite-primitive" class="nav-h3"><span class="nav-year">2023</span>What Is Your Favorite Primitive</a>
+        <a href="#work-screen-melancholy" class="nav-h3"><span class="nav-year">2026</span>Screen Melancholy</a>
+      </div>
+
+      <!-- Other works — add or remove <a> lines here to change the nav list -->
+      <a href="#work-larp" class="nav-h2"><span class="nav-year">2024</span>If You Can't LARP, You'll Cry</a>
+      <a href="#work-boring-gray" class="nav-h2"><span class="nav-year">2021</span>Boring Gray</a>
+      <a href="#work-important-message" class="nav-h2"><span class="nav-year">2019–20</span>important_message.mp4</a>
+      <a href="#work-dont-you-love-me" class="nav-h2"><span class="nav-year">2016</span>Don't You Love Me No More</a>
+      <a href="#work-an-accident" class="nav-h2"><span class="nav-year">2015</span>An Accident</a>
+      <a href="#work-an-animation" class="nav-h2"><span class="nav-year">2013</span>An Animation</a>
+      <a href="#work-walking-on-beach" class="nav-h2"><span class="nav-year">2010</span>Walking on the beach</a>
+
+    </div>
+
+    <!-- ← Contact email at bottom of sidebar -->
+    <div class="nav-email">
+      <a href="mailto:liyifan.studio@gmail.com">liyifan.studio@gmail.com</a>
+    </div>
+
+  </div><!-- /nav-body -->
+</nav>
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  MAIN CONTENT                                               ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<main>
+  <section id="work">
+    <div class="label-h1">Work</div>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+         MACHINIMA TRILOGY — statement + 3 works
+         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div class="trilogy-group" id="work-machinima">
+
+      <!-- ← Sub-heading title -->
+      <div class="label-h2">Machinima Trilogy 2020–2026</div>
+
+      <!-- ← Artist statement paragraphs — edit text inside <p> tags -->
+      <div class="trilogy-statement">
+        <div class="trilogy-text">
+          <p>After completing <em>important_message.mp4</em>, I realized the visceral power of rapid, real-time rendering technology. It made me reflect on how this sheer speed alters the mode of motion graphics production itself. Historical accounts often note how the invention of pre-packaged tin paint tubes indirectly birthed Impressionism and the practice of en plein air painting. This led me to ponder: will today's near-instantaneous rendering tools similarly reshape the creative methodology of artists, or even reconfigure the logic of imagery?</p>
+          <p>Animation was a slow, deliberate craft. Artists structured movement frame by frame, enduring endless long render times to glimpse the final result. In this repetitive cycle of rendering and refining, images were sculpted much like handicrafts. In such a paradigm, improvisation was impossible, because the cost of production was simply too high. Artists could never share a temporal present with their audience during the making and every single decision had to be meticulously calculated.</p>
+          <p>I began to wonder if I could build a self-made toolkit inside a game engine, allowing me to generate motion graphics in a highly improvisational, almost performative manner.</p>
+          <p>This toolkit ultimately evolved into a virtual reality-based puppetry system. Yet, within this setup, I am not a traditional puppeteer performing for an audience; instead, I am playing with a toy, performing for myself. This explains why, throughout the video, I am always facing the puppet rather than the viewer. It's like a safe house for me.</p>
+          <p>Embracing a DIY filmmaking attitude, I build almost everything by myself in series, operating as a one-person crew. From building the environment to props modeling. And of course the voice acting and actual performance, I took on everything. This process naturally birthed the persona within the series: a figure who constantly addresses the audience, appearing exceedingly intelligent yet paradoxically foolish; someone always eager to spout grand philosophies, yet profoundly fragile.</p>
+          <p>I have always viewed my image production (or rather, my image performance) as a form of writing. But this "writing" is never natural. It is an act made possible only through technology. It feels deeply intuitive, yet this intuition is inherently laced with technological biases. Our bodies, memories, fears, and desires are extended by technology, yet simultaneously compressed across dimensions. Through a language of dark whimsy and self-amusement, I attempt to inhabit the very crevices of this technological compression.</p>
+        </div>
+        <img class="work-img" src="images/Machinima Trilogy.jpg" alt="Machinima Trilogy">
+      </div>
+
+      <!-- The 3 trilogy works (indented with left border) -->
+      <div class="trilogy-works">
+
+        <!-- ── WORK: howdoyouturnthison ──────────────────────────────
+             To edit: change year, title, medium, duration, description
+             ─────────────────────────────────────────────────────────── -->
+        <div class="work" id="work-howdoyouturnthison">
+          <div class="work-title-row">
+            <span class="work-year">2021</span>              <!-- ← year -->
+            <span class="work-title">howdoyouturnthison</span> <!-- ← title -->
+          </div>
+          <img class="work-img" src="images/howdoyouturnthison.jpg" alt="howdoyouturnthison">
+          <div class="work-meta">
+            <span>Single-channel video</span>  <!-- ← medium -->
+            <span>17'30"</span>                <!-- ← duration -->
+          </div>
+          <div class="work-link">
+            <a href="https://vimeo.com/1190978700?share=copy&fl=sv&fe=ci" target="_blank" rel="noopener">Watch ↗</a>
+          </div>
+          <div class="work-desc">
+            <p><em>howdoyouturnthison</em> originates from an interrogation of bodily control and fear. In developing this puppetry system, my initial hurdle was technical and conceptual: how to command a digital body via physical controllers. To address this, I examined the history of player-character mechanics in video games since the '90s, drawing connections to robotics, sci-fi cinema, and the body politics of modern digital avatars. It reflects on how Western sci-fi tropes have conditioned an Asian millennial's collective imagination of existence.</p>
+            <p>The character in the film inhabits a rooftop illegal apartment, furnished entirely with digital assets scraped from the internet — akin to a temporary refuge rigged up by a predatory landlord. In tandem, the character's body itself is a patchwork of mismatched digital parts. This raises a critical question for the digital age: do virtual bodies offer us newfound fluidity, or do they construct boundaries even more calcified than those in the real world?</p>
+          </div>
+        </div>
+
+        <!-- ── WORK: What Is Your Favorite Primitive ──────────────── -->
+        <div class="work" id="work-favorite-primitive">
+          <div class="work-title-row">
+            <span class="work-year">2023</span>
+            <span class="work-title">What Is Your Favorite Primitive</span>
+          </div>
+          <img class="work-img" src="images/WhatIsyourFavoritePrimitive.jpg" alt="What Is Your Favorite Primitive">
+          <div class="work-meta">
+            <span>Single-channel video</span>
+            <span>37'05"</span>
+          </div>
+          <div class="work-desc">
+            <p>As digital software shifts from a perpetual license to a subscription-based model, how does this redefine the very nature of artistic expression? In <em>What Is Your Favorite Primitive</em>, I seek to interrogate the inherent politics of software tools, capturing the systemic struggle within the social and ethical dilemmas spawned by this shifting institutional paradigm. How does the medium of the moving image alter our modes of communication? In what ways do emojis convey emotional nuances that transcend individual cognitive perception?</p>
+            <p>The work chronicles human life (and death) through intimate details, while boldly speculating that video-mediated technologies might structure a radical new biopolitics by projecting a certain collectivity that is yet to come.</p>
+          </div>
+        </div>
+
+        <!-- ── WORK: Screen Melancholy ────────────────────────────── -->
+        <div class="work" id="work-screen-melancholy">
+          <div class="work-title-row">
+            <span class="work-year">2026</span>
+            <span class="work-title">Screen Melancholy</span>
+          </div>
+          <img class="work-img" src="images/SreenMelancohy.jpg" alt="Screen Melancholy">
+          <div class="work-meta">
+            <span>Single-channel video</span>
+            <span>55'00"</span>
+          </div>
+          <div class="work-desc">
+            <p><em>Screen Melancholy</em> is my third game engine practice. It explores the complex, layered relationship between individuals and "images" in the visual-first generation. This relationship encompasses how people receive and create images. Through the character in the video, I encourage viewers to "learn how to make animation!" As a cautionary warning, it suggests that understanding how images are produced is essential to grasp the power mechanism behind them. Ironically, these profound truths about images are expressed through the very medium of images. While the philosophical-sounding statements are delivered with such sincerity, the character comes across as rather mischievous. The obscure knowledge in the work resembles that of Wikipedia or content farms, leaving viewers unsure where to place their gaze. This feels like a private game between me and the audience. Through the screen, I make them laugh while also evoking fear or anger. These emotions force the screen to decompress and, in the viewer's mind, transform into a world of its own. They are invited into this world but are also intermittently excluded, constantly reminded of a truth: images are like magic. Behind this magic, however, lies something far more complex than sorcery.</p>
+          </div>
+        </div>
+
+      </div><!-- /trilogy-works -->
+    </div><!-- /trilogy-group -->
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+         OTHER WORKS — each block follows the same pattern
+         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+
+    <!-- ── WORK: If You Can't LARP ─────────────────────────────────── -->
+    <div class="work" id="work-larp">
+      <div class="work-title-row">
+        <span class="work-year">2024</span>
+        <span class="work-title">If You Can't LARP, You'll Cry</span>
+      </div>
+      <div class="work-collab">With Harrison Hall, Mat Spisbah</div>  <!-- ← collaborators; delete line to remove -->
+      <img class="work-img" src="images/IF YOU CAN'T LARP, YOU'LL CRY.jpg" alt="If You Can't LARP, You'll Cry">
+      <div class="work-meta">
+        <span>Single-channel video</span>
+        <span>5'37"</span>
+      </div>
+      <div class="work-link">
+        <a href="https://vimeo.com/1195950290?share=copy&fl=sv&fe=ci" target="_blank" rel="noopener">Watch ↗</a>
+      </div>
+      <div class="work-desc">
+        <p>LARP (Live Action Role-Playing) is, by essence, a game of embodiment and freedom. But when access to digital tools is conditional, what remains of our ability to play, to create our own narratives? Are we still actors, or merely subscribers trapped in a loop of consumption?</p>
+        <p><em>If You Can't LARP, You'll Cry</em> examines the transformations of digital production within a subscription economy that turns technology not into a tool we own, but into a service we submit to. Through a hypnotic digital ballet, clay sculptures come to life, orchestrated by a hybrid figure — both puppeteer and captive — with a virtual reality headset firmly strapped to their head.</p>
+        <p>In this digital ritual, the names of cyberattacks resonate like modern prayers. <em>If You Can't LARP, You'll Cry</em> prophesizes: if our identities vanish as soon as the subscription expires, the ultimate revelation might just be... at the edge of time.</p>
+      </div>
+    </div>
+
+    <!-- ── WORK: Boring Gray ───────────────────────────────────────── -->
+    <div class="work" id="work-boring-gray">
+      <div class="work-title-row">
+        <span class="work-year">2021</span>
+        <span class="work-title">Boring Gray</span>
+      </div>
+      <img class="work-img" src="images/BoringGray.jpg" alt="Boring Gray">
+      <div class="work-meta">
+        <span>Multi-channel video installation</span>
+        <span>7'30"</span>
+      </div>
+      <div class="work-link">
+        <a href="https://vimeo.com/1195950550?share=copy&fl=sv&fe=ci" target="_blank" rel="noopener">Exhibition View ↗</a>
+      </div>
+      <div class="work-desc">
+        <p>There are many legends in human culture that are closely associated with visual taboos, such as one might be fossilized upon seeing the prohibited object or lose one's life due to gradual weakening after seeing one's own reflection in water. The action of seeing is itself both a temptation and a curse. Computer graphics offers humanity a fresh way of viewing, but at the same time, imposes a new curse as well. In <em>Boring Gray</em>, he collages numerous video game images, stock photographs and model databases into an enormous corpse that is similar to a dying monster in video games who has been whispering all sorts of visual curses.</p>
+      </div>
+    </div>
+
+    <!-- ── WORK: important_message.mp4 ───────────────────────────── -->
+    <div class="work" id="work-important-message">
+      <div class="work-title-row">
+        <span class="work-year">2019–2020</span>
+        <span class="work-title">important_message.mp4</span>
+      </div>
+      <img class="work-img" src="images/importaint_message.jpg" alt="important_message.mp4">
+      <div class="work-meta">
+        <span>Multi-channel video installation</span>
+        <span>17'30"</span>
+      </div>
+      <div class="work-link">
+        <a href="https://vimeo.com/1195950395?share=copy&fl=sv&fe=ci" target="_blank" rel="noopener">Exhibition View ↗</a>
+        <a href="https://vimeo.com/1196037573?share=copy&fl=sv&fe=ci" target="_blank" rel="noopener">Single-Channel Preview ↗</a>
+      </div>
+      <div class="work-desc">
+        <p>In <em>The Matrix</em>, Neo shouts, "This is not real!" in anger as he learns about the truth of the Matrix. Morpheus smiles and asks, "What is real?" What is real? Twenty years after the movie was presented to the world, the question has become even more intriguing today. Technology allows humans to take in information in almost superhuman quantities. We are fearful of information that is unable to be determined as true or false while we project our desires onto virtual, digital flesh. A piece of information may not be true, but what about the fear and desire it triggers? Is there such a thing as false fear? What about unreal desire? <em>important_message.mp4</em> starts with a series of internet conspiracy theories and explores human life in the face of internet and technological advancements.</p>
+      </div>
+    </div>
+
+    <!-- ── WORK: Don't You Love Me No More ───────────────────────── -->
+    <div class="work" id="work-dont-you-love-me">
+      <div class="work-title-row">
+        <span class="work-year">2016</span>
+        <span class="work-title">Don't You Love Me No More</span>
+      </div>
+      <img class="work-img" src="images/DontYouLoveMeNoMore.jpg" alt="Don't You Love Me No More">
+      <div class="work-meta">
+        <span>Installation</span>
+        <span>16'37"</span>
+      </div>
+      <div class="work-link">
+        <a href="https://vimeo.com/1196041505?share=copy&fl=sv&fe=ci" target="_blank" rel="noopener">Exhibition View ↗</a>
+      </div>
+      <div class="work-desc">
+        <p>This work uses a projector to sculpturally depict spoken language, blending painting and sculpture. Through mapping projection onto sculptural forms, it aims to create a more organic relationship between the image and the viewer. Unlike traditional images that reduce the viewer's bodily power, this work allows the viewer, within such a relationship, to move freely through the space and actively choose viewing angles. It depicts the frantic ramblings of a dying person in delirium. Through joyful singing of military songs, it explores themes of love, patriotism, and other emotional expressions. If it is to be given any meaning, it lies in the spontaneous imaginings that unexpectedly emerge during the artist's ongoing struggle with the media — fantasies about the work itself, fragmented and impossible to take full form.</p>
+      </div>
+    </div>
+
+    <!-- ── WORK: An Accident ─────────────────────────────────────── -->
+    <div class="work" id="work-an-accident">
+      <div class="work-title-row">
+        <span class="work-year">2015</span>
+        <span class="work-title">An Accident</span>
+      </div>
+      <img class="work-img" src="images/An Accident.jpg" alt="An Accident">
+      <div class="work-meta">
+        <span>Installation</span>
+        <span>11'30"</span>
+      </div>
+      <div class="work-desc">
+        <p>This work uses a nonlinear narrative to depict various episodes surrounding a car accident. In the corner against the wall, large piles of scattered cardboard boxes are stacked. A projector shines on these boxes in an illogical way, with each box painted with a tiny theatrical scene. Projections of insects crawling connect each bizarre, animated scene, leading viewers into a narrative structure that seems almost endless.</p>
+        <p>The fragmented nature of this work encourages viewers to choose their own viewing duration, positions, and interpretations of the story. Typically, image creation requires planning, achievable only through rational pre-production, filming, editing, and image computing. However, Li Yi-Fan questions this rationality and completeness through "scatteredness," making the work more like a document that references art itself in this incomplete state rather than a finished work — capturing such a document-like state of living.</p>
+      </div>
+    </div>
+
+    <!-- ── WORK: An Animation ────────────────────────────────────── -->
+    <div class="work" id="work-an-animation">
+      <div class="work-title-row">
+        <span class="work-year">2013</span>
+        <span class="work-title">An Animation</span>
+      </div>
+      <img class="work-img" src="images/An Animation.jpg" alt="An Animation">
+      <div class="work-meta">
+        <span>Installation</span>
+        <span>6'03"</span>
+      </div>
+      <div class="work-desc">
+        <p>This work stems from a film project the artist abandoned. He had created extensive sets, puppets, and scripts for a puppet animation, but was unable to begin filming for various reasons. The project was eventually left unfinished. Later, the leftover sets and props reminded the artist of the period when the project was created, full of ideas that had only been conceptualized but never actualized. As a result, he uses a projector to invoke these discarded objects, recreating scenes that mirror his life: fragmented, trivial, and unable to take form.</p>
+      </div>
+    </div>
+
+    <!-- ── WORK: Walking on the beach ───────────────────────────── -->
+    <div class="work" id="work-walking-on-beach">
+      <div class="work-title-row">
+        <span class="work-year">2010</span>
+        <span class="work-title">Walking on the beach</span>
+      </div>
+      <img class="work-img" src="images/WalkingOnTheBeach.jpg" alt="Walking on the beach">
+      <div class="work-meta">
+        <span>Single-channel video</span>
+        <span>6'50"</span>
+      </div>
+      <div class="work-link">
+        <a href="https://vimeo.com/1196040314?share=copy&fl=sv&fe=ci" target="_blank" rel="noopener">Watch ↗</a>
+      </div>
+      <div class="work-desc">
+        <p>In this servo-controlled puppet animation, the protagonist encounters three questions and three answers during a beach walk. Crafted with motors to animate puppets and shot as a low-tech pornographic short, the work portrays the protagonist constantly contemplating different desires and the choices they present. It also captures the melancholy of passing time amid a flood of carnal fantasies. Displaying the work on a tiny television screen intensifies the sense of intimacy of the viewing experience.</p>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<script>
+  /* ── scroll-tracking & trilogy toggle — no need to edit ── */
+  const trilogyToggle = document.querySelector('.trilogy-toggle');
+  const trilogyL3    = document.getElementById('trilogy-l3');
+  const navH1   = document.querySelector('.nav-h1');
+  const navH2s  = document.querySelectorAll('.nav-h2');
+  const navH3s  = document.querySelectorAll('.nav-h3');
+
+  function openTrilogy() {
+    trilogyL3.classList.add('open');
+    trilogyToggle.classList.add('open');
+  }
+  function closeTrilogy() {
+    trilogyL3.classList.remove('open');
+    trilogyToggle.classList.remove('open');
+  }
+
+  trilogyToggle.addEventListener('click', () => {
+    trilogyL3.classList.contains('open') ? closeTrilogy() : openTrilogy();
+  });
+
+  document.querySelector('.nav-h2[href="#work-machinima"]')
+    .addEventListener('click', openTrilogy);
+
+  function clearActive() {
+    navH1.classList.remove('active');
+    navH2s.forEach(a => a.classList.remove('active'));
+    navH3s.forEach(a => a.classList.remove('active'));
+  }
+
+  const OBS_MARGIN = '-15% 0px -72% 0px';
+
+  const h2Obs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      clearActive();
+      closeTrilogy();
+      navH1.classList.add('active');
+      const link = document.querySelector(`.nav-h2[href="#${entry.target.id}"]`);
+      if (link) link.classList.add('active');
+    });
+  }, { rootMargin: OBS_MARGIN });
+
+  ['work-larp','work-boring-gray','work-important-message',
+   'work-dont-you-love-me','work-an-accident','work-an-animation',
+   'work-walking-on-beach'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) h2Obs.observe(el);
+  });
+
+  const trilogyHeaderObs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      clearActive();
+      navH1.classList.add('active');
+      document.querySelector('.nav-h2[href="#work-machinima"]').classList.add('active');
+    });
+  }, { rootMargin: OBS_MARGIN });
+
+  const trilogyGroup = document.getElementById('work-machinima');
+  if (trilogyGroup) trilogyHeaderObs.observe(trilogyGroup);
+
+  const h3Obs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      clearActive();
+      openTrilogy();
+      navH1.classList.add('active');
+      document.querySelector('.nav-h2[href="#work-machinima"]').classList.add('active');
+      const link = document.querySelector(`.nav-h3[href="#${entry.target.id}"]`);
+      if (link) link.classList.add('active');
+    });
+  }, { rootMargin: OBS_MARGIN });
+
+  ['work-howdoyouturnthison','work-favorite-primitive','work-screen-melancholy']
+    .forEach(id => {
+      const el = document.getElementById(id);
+      if (el) h3Obs.observe(el);
+    });
+
+  /* ── mobile hamburger menu ── */
+  const hamburger = document.querySelector('.nav-hamburger');
+  const navBody   = document.querySelector('.nav-body');
+
+  hamburger.addEventListener('click', () => {
+    const opening = !navBody.classList.contains('open');
+    navBody.classList.toggle('open');
+    hamburger.classList.toggle('open');
+    hamburger.setAttribute('aria-expanded', String(opening));
+  });
+
+  navBody.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      navBody.classList.remove('open');
+      hamburger.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', 'false');
+    });
+  });
+</script>
+
+</body>
+</html>
