@@ -23,6 +23,7 @@
       --border: #e4e4e4;  /* dividing lines */
       --bg:     #fff;     /* page background */
       --nav-w:  350px;    /* left sidebar width */
+      --link:   #0000EE;  /* classic hyperlink blue */
     }
 
     html { scroll-behavior: smooth; }
@@ -79,7 +80,7 @@
       transition: color 0.15s;
     }
     .nav-h1:hover { color: var(--text); }
-    .nav-h1.active { color: var(--text); }
+    .nav-h1.active { color: var(--link); }
 
     .nav-l2 { display: flex; flex-direction: column; }
 
@@ -100,7 +101,7 @@
       transition: color 0.15s;
     }
     .nav-h2:hover { color: var(--text); }
-    .nav-h2.active { color: var(--text); }
+    .nav-h2.active { color: var(--link); }
 
     /* ▸ expand button next to Machinima Trilogy */
     .trilogy-toggle {
@@ -140,7 +141,7 @@
       transition: color 0.15s;
     }
     .nav-h3:hover { color: var(--muted); }
-    .nav-h3.active { color: var(--text); }
+    .nav-h3.active { color: var(--link); }
 
     /* Year column in sidebar — fixed width keeps titles aligned */
     .nav-year {
@@ -311,10 +312,10 @@
     }
     .work-link a {
       font-size: 12px;
-      color: var(--muted);
+      color: var(--link);
       text-decoration: none;
       letter-spacing: 0.04em;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--link);
       padding-bottom: 1px;
       transition: color 0.15s, border-color 0.15s;
     }
