@@ -9,6 +9,13 @@
        ╚══════════════════════════════════════════════╝ -->
   <title>Li Yi-Fan</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- ┌─────────────────────────────────────────────────────────────────┐
+       │ FONT — swap "Inter" for any Google Font name, e.g. "DM Sans"   │
+       │ https://fonts.google.com to browse options                     │
+       └─────────────────────────────────────────────────────────────────┘ -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&display=swap" rel="stylesheet">
 
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -23,13 +30,12 @@
       --border: #e4e4e4;  /* dividing lines */
       --bg:     #fff;     /* page background */
       --nav-w:  350px;    /* left sidebar width */
-      --link:   #0000EE;  /* classic hyperlink blue */
     }
 
     html { scroll-behavior: smooth; }
 
     body {
-      font-family: Arial, Helvetica, sans-serif; /* ← change font here */
+      font-family: 'DM Sans', system-ui, sans-serif; /* ← change font here */
       font-weight: 400;
       font-size: 15px;   /* ← base body font size */
       line-height: 1.85; /* ← line spacing for body text */
@@ -80,7 +86,7 @@
       transition: color 0.15s;
     }
     .nav-h1:hover { color: var(--text); }
-    .nav-h1.active { color: var(--link); }
+    .nav-h1.active { color: var(--text); }
 
     .nav-l2 { display: flex; flex-direction: column; }
 
@@ -101,7 +107,7 @@
       transition: color 0.15s;
     }
     .nav-h2:hover { color: var(--text); }
-    .nav-h2.active { color: var(--link); }
+    .nav-h2.active { color: var(--text); }
 
     /* ▸ expand button next to Machinima Trilogy */
     .trilogy-toggle {
@@ -141,7 +147,7 @@
       transition: color 0.15s;
     }
     .nav-h3:hover { color: var(--muted); }
-    .nav-h3.active { color: var(--link); }
+    .nav-h3.active { color: var(--text); }
 
     /* Year column in sidebar — fixed width keeps titles aligned */
     .nav-year {
@@ -204,15 +210,8 @@
 
     /* Artist statement text block */
     .trilogy-statement {
-      margin-bottom: 72px;
-      display: grid;
-      grid-template-columns: 1fr clamp(220px, 50vw, 720px);
-      column-gap: 48px;
-      align-items: stretch;
-    }
-
-    .trilogy-text {
-      max-width: 700px;
+      max-width: 700px;      /* ← max width of statement paragraphs */
+      margin-bottom: 72px;   /* ← gap between statement and trilogy works */
     }
 
     .trilogy-statement p {
@@ -267,7 +266,7 @@
     }
 
     .work-title {
-      font-size: 26px;   /* ← work title size */
+      font-size: 22px;   /* ← work title size */
       font-weight: 300;
       font-style: italic;
       letter-spacing: -0.015em;
@@ -301,25 +300,6 @@
     }
     .work-desc p { margin-bottom: 18px; }
     .work-desc p:last-child { margin-bottom: 0; }
-
-    /* External links below each work */
-    .work-link {
-      margin-top: 12px;
-      margin-bottom: 20px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px 24px;
-    }
-    .work-link a {
-      font-size: 12px;
-      color: var(--link);
-      text-decoration: none;
-      letter-spacing: 0.04em;
-      border-bottom: 1px solid var(--link);
-      padding-bottom: 1px;
-      transition: color 0.15s, border-color 0.15s;
-    }
-    .work-link a:hover { color: var(--text); border-color: var(--text); }
 
     /* Work image — sits in the right column on desktop */
     .work-img {
@@ -435,18 +415,6 @@
       /* Scroll targets need more offset to clear the taller fixed header */
       .work, .trilogy-group { scroll-margin-top: 88px; }
 
-      /* Revert trilogy statement to single column on mobile; image above text */
-      .trilogy-statement {
-        display: flex;
-        flex-direction: column;
-      }
-      .trilogy-statement .work-img {
-        order: -1;
-        width: 100%;
-        height: 220px;
-        margin: 0 0 14px 0;
-      }
-
       /* Revert work layout to single column; image appears in DOM order (between title and meta) */
       .work {
         display: block;
@@ -459,14 +427,12 @@
         object-position: center;
         margin: 14px 0;
       }
-      /* Tighter line spacing on mobile */
-      body { line-height: 1.65; }
 
       /* Tighter line spacing on mobile */
       body { line-height: 1.65; }
 
       /* Slightly smaller title on narrow screens */
-      .work-title { font-size: 22px; }
+      .work-title { font-size: 19px; }
     }
   </style>
 </head>
@@ -541,15 +507,12 @@
 
       <!-- ← Artist statement paragraphs — edit text inside <p> tags -->
       <div class="trilogy-statement">
-        <div class="trilogy-text">
-          <p>After completing <em>important_message.mp4</em>, I realized the visceral power of rapid, real-time rendering technology. It made me reflect on how this sheer speed alters the mode of motion graphics production itself. Historical accounts often note how the invention of pre-packaged tin paint tubes indirectly birthed Impressionism and the practice of en plein air painting. This led me to ponder: will today's near-instantaneous rendering tools similarly reshape the creative methodology of artists, or even reconfigure the logic of imagery?</p>
-          <p>Animation was a slow, deliberate craft. Artists structured movement frame by frame, enduring endless long render times to glimpse the final result. In this repetitive cycle of rendering and refining, images were sculpted much like handicrafts. In such a paradigm, improvisation was impossible, because the cost of production was simply too high. Artists could never share a temporal present with their audience during the making and every single decision had to be meticulously calculated.</p>
-          <p>I began to wonder if I could build a self-made toolkit inside a game engine, allowing me to generate motion graphics in a highly improvisational, almost performative manner.</p>
-          <p>This toolkit ultimately evolved into a virtual reality-based puppetry system. Yet, within this setup, I am not a traditional puppeteer performing for an audience; instead, I am playing with a toy, performing for myself. This explains why, throughout the video, I am always facing the puppet rather than the viewer. It's like a safe house for me.</p>
-          <p>Embracing a DIY filmmaking attitude, I build almost everything by myself in series, operating as a one-person crew. From building the environment to props modeling. And of course the voice acting and actual performance, I took on everything. This process naturally birthed the persona within the series: a figure who constantly addresses the audience, appearing exceedingly intelligent yet paradoxically foolish; someone always eager to spout grand philosophies, yet profoundly fragile.</p>
-          <p>I have always viewed my image production (or rather, my image performance) as a form of writing. But this "writing" is never natural. It is an act made possible only through technology. It feels deeply intuitive, yet this intuition is inherently laced with technological biases. Our bodies, memories, fears, and desires are extended by technology, yet simultaneously compressed across dimensions. Through a language of dark whimsy and self-amusement, I attempt to inhabit the very crevices of this technological compression.</p>
-        </div>
-        <img class="work-img" src="images/Machinima Trilogy.jpg" alt="Machinima Trilogy">
+        <p>After completing <em>important_message.mp4</em>, I realized the visceral power of rapid, real-time rendering technology. It made me reflect on how this sheer speed alters the mode of motion graphics production itself. Historical accounts often note how the invention of pre-packaged tin paint tubes indirectly birthed Impressionism and the practice of en plein air painting. This led me to ponder: will today's near-instantaneous rendering tools similarly reshape the creative methodology of artists, or even reconfigure the logic of imagery?</p>
+        <p>Animation was a slow, deliberate craft. Artists structured movement frame by frame, enduring endless long render times to glimpse the final result. In this repetitive cycle of rendering and refining, images were sculpted much like handicrafts. In such a paradigm, improvisation was impossible, because the cost of production was simply too high. Artists could never share a temporal present with their audience during the making and every single decision had to be meticulously calculated.</p>
+        <p>I began to wonder if I could build a self-made toolkit inside a game engine, allowing me to generate motion graphics in a highly improvisational, almost performative manner.</p>
+        <p>This toolkit ultimately evolved into a virtual reality-based puppetry system. Yet, within this setup, I am not a traditional puppeteer performing for an audience; instead, I am playing with a toy, performing for myself. This explains why, throughout the video, I am always facing the puppet rather than the viewer. It's like a safe house for me.</p>
+        <p>Embracing a DIY filmmaking attitude, I build almost everything by myself in series, operating as a one-person crew. From building the environment to props modeling. And of course the voice acting and actual performance, I took on everything. This process naturally birthed the persona within the series: a figure who constantly addresses the audience, appearing exceedingly intelligent yet paradoxically foolish; someone always eager to spout grand philosophies, yet profoundly fragile.</p>
+        <p>I have always viewed my image production (or rather, my image performance) as a form of writing. But this "writing" is never natural. It is an act made possible only through technology. It feels deeply intuitive, yet this intuition is inherently laced with technological biases. Our bodies, memories, fears, and desires are extended by technology, yet simultaneously compressed across dimensions. Through a language of dark whimsy and self-amusement, I attempt to inhabit the very crevices of this technological compression.</p>
       </div>
 
       <!-- The 3 trilogy works (indented with left border) -->
@@ -568,9 +531,6 @@
             <span>Single-channel video</span>  <!-- ← medium -->
             <span>17'30"</span>                <!-- ← duration -->
           </div>
-          <div class="work-link">
-            <a href="https://vimeo.com/1190978700?share=copy&fl=sv&fe=ci" target="_blank" rel="noopener">Watch ↗</a>
-          </div>
           <div class="work-desc">
             <p><em>howdoyouturnthison</em> originates from an interrogation of bodily control and fear. In developing this puppetry system, my initial hurdle was technical and conceptual: how to command a digital body via physical controllers. To address this, I examined the history of player-character mechanics in video games since the '90s, drawing connections to robotics, sci-fi cinema, and the body politics of modern digital avatars. It reflects on how Western sci-fi tropes have conditioned an Asian millennial's collective imagination of existence.</p>
             <p>The character in the film inhabits a rooftop illegal apartment, furnished entirely with digital assets scraped from the internet — akin to a temporary refuge rigged up by a predatory landlord. In tandem, the character's body itself is a patchwork of mismatched digital parts. This raises a critical question for the digital age: do virtual bodies offer us newfound fluidity, or do they construct boundaries even more calcified than those in the real world?</p>
@@ -588,9 +548,6 @@
             <span>Single-channel video</span>
             <span>37'05"</span>
           </div>
-          <div class="work-link">
-            <a href="https://vimeo.com/998957363?share=copy&fl=sv&fe=ci" target="_blank" rel="noopener">Watch ↗</a>
-          </div>
           <div class="work-desc">
             <p>As digital software shifts from a perpetual license to a subscription-based model, how does this redefine the very nature of artistic expression? In <em>What Is Your Favorite Primitive</em>, I seek to interrogate the inherent politics of software tools, capturing the systemic struggle within the social and ethical dilemmas spawned by this shifting institutional paradigm. How does the medium of the moving image alter our modes of communication? In what ways do emojis convey emotional nuances that transcend individual cognitive perception?</p>
             <p>The work chronicles human life (and death) through intimate details, while boldly speculating that video-mediated technologies might structure a radical new biopolitics by projecting a certain collectivity that is yet to come.</p>
@@ -607,9 +564,6 @@
           <div class="work-meta">
             <span>Single-channel video</span>
             <span>55'00"</span>
-          </div>
-          <div class="work-link">
-            <a href="https://vimeo.com/1190982130?share=copy&fl=sv&fe=ci" target="_blank" rel="noopener">Watch ↗</a>
           </div>
           <div class="work-desc">
             <p><em>Screen Melancholy</em> is my third game engine practice. It explores the complex, layered relationship between individuals and "images" in the visual-first generation. This relationship encompasses how people receive and create images. Through the character in the video, I encourage viewers to "learn how to make animation!" As a cautionary warning, it suggests that understanding how images are produced is essential to grasp the power mechanism behind them. Ironically, these profound truths about images are expressed through the very medium of images. While the philosophical-sounding statements are delivered with such sincerity, the character comes across as rather mischievous. The obscure knowledge in the work resembles that of Wikipedia or content farms, leaving viewers unsure where to place their gaze. This feels like a private game between me and the audience. Through the screen, I make them laugh while also evoking fear or anger. These emotions force the screen to decompress and, in the viewer's mind, transform into a world of its own. They are invited into this world but are also intermittently excluded, constantly reminded of a truth: images are like magic. Behind this magic, however, lies something far more complex than sorcery.</p>
@@ -635,9 +589,6 @@
         <span>Single-channel video</span>
         <span>5'37"</span>
       </div>
-      <div class="work-link">
-        <a href="https://vimeo.com/1195950290?share=copy&fl=sv&fe=ci" target="_blank" rel="noopener">Watch ↗</a>
-      </div>
       <div class="work-desc">
         <p>LARP (Live Action Role-Playing) is, by essence, a game of embodiment and freedom. But when access to digital tools is conditional, what remains of our ability to play, to create our own narratives? Are we still actors, or merely subscribers trapped in a loop of consumption?</p>
         <p><em>If You Can't LARP, You'll Cry</em> examines the transformations of digital production within a subscription economy that turns technology not into a tool we own, but into a service we submit to. Through a hypnotic digital ballet, clay sculptures come to life, orchestrated by a hybrid figure — both puppeteer and captive — with a virtual reality headset firmly strapped to their head.</p>
@@ -656,9 +607,6 @@
         <span>Multi-channel video installation</span>
         <span>7'30"</span>
       </div>
-      <div class="work-link">
-        <a href="https://vimeo.com/1195950550?share=copy&fl=sv&fe=ci" target="_blank" rel="noopener">Exhibition View ↗</a>
-      </div>
       <div class="work-desc">
         <p>There are many legends in human culture that are closely associated with visual taboos, such as one might be fossilized upon seeing the prohibited object or lose one's life due to gradual weakening after seeing one's own reflection in water. The action of seeing is itself both a temptation and a curse. Computer graphics offers humanity a fresh way of viewing, but at the same time, imposes a new curse as well. In <em>Boring Gray</em>, he collages numerous video game images, stock photographs and model databases into an enormous corpse that is similar to a dying monster in video games who has been whispering all sorts of visual curses.</p>
       </div>
@@ -675,10 +623,6 @@
         <span>Multi-channel video installation</span>
         <span>17'30"</span>
       </div>
-      <div class="work-link">
-        <a href="https://vimeo.com/1195950395?share=copy&fl=sv&fe=ci" target="_blank" rel="noopener">Exhibition View ↗</a>
-        <a href="https://vimeo.com/1196037573?share=copy&fl=sv&fe=ci" target="_blank" rel="noopener">Single-Channel Preview ↗</a>
-      </div>
       <div class="work-desc">
         <p>In <em>The Matrix</em>, Neo shouts, "This is not real!" in anger as he learns about the truth of the Matrix. Morpheus smiles and asks, "What is real?" What is real? Twenty years after the movie was presented to the world, the question has become even more intriguing today. Technology allows humans to take in information in almost superhuman quantities. We are fearful of information that is unable to be determined as true or false while we project our desires onto virtual, digital flesh. A piece of information may not be true, but what about the fear and desire it triggers? Is there such a thing as false fear? What about unreal desire? <em>important_message.mp4</em> starts with a series of internet conspiracy theories and explores human life in the face of internet and technological advancements.</p>
       </div>
@@ -694,9 +638,6 @@
       <div class="work-meta">
         <span>Installation</span>
         <span>16'37"</span>
-      </div>
-      <div class="work-link">
-        <a href="https://vimeo.com/1196041505?share=copy&fl=sv&fe=ci" target="_blank" rel="noopener">Exhibition View ↗</a>
       </div>
       <div class="work-desc">
         <p>This work uses a projector to sculpturally depict spoken language, blending painting and sculpture. Through mapping projection onto sculptural forms, it aims to create a more organic relationship between the image and the viewer. Unlike traditional images that reduce the viewer's bodily power, this work allows the viewer, within such a relationship, to move freely through the space and actively choose viewing angles. It depicts the frantic ramblings of a dying person in delirium. Through joyful singing of military songs, it explores themes of love, patriotism, and other emotional expressions. If it is to be given any meaning, it lies in the spontaneous imaginings that unexpectedly emerge during the artist's ongoing struggle with the media — fantasies about the work itself, fragmented and impossible to take full form.</p>
@@ -746,9 +687,6 @@
       <div class="work-meta">
         <span>Single-channel video</span>
         <span>6'50"</span>
-      </div>
-      <div class="work-link">
-        <a href="https://vimeo.com/1196040314?share=copy&fl=sv&fe=ci" target="_blank" rel="noopener">Watch ↗</a>
       </div>
       <div class="work-desc">
         <p>In this servo-controlled puppet animation, the protagonist encounters three questions and three answers during a beach walk. Crafted with motors to animate puppets and shot as a low-tech pornographic short, the work portrays the protagonist constantly contemplating different desires and the choices they present. It also captures the melancholy of passing time amid a flood of carnal fantasies. Displaying the work on a tiny television screen intensifies the sense of intimacy of the viewing experience.</p>
