@@ -460,6 +460,40 @@
 
       .trilogy-statement { display: flex; flex-direction: column; }
       .trilogy-statement .work-img { order: -1; width: 100%; height: 220px; margin: 0 0 14px 0; }
+
+      #cv { scroll-margin-top: 88px; }
+    }
+
+    /* ══════════════════ CV SECTION ══════════════════ */
+    #nav-cv-link { margin-top: 20px; }
+
+    #cv {
+      margin-top: 80px;
+      scroll-margin-top: 52px;
+    }
+    .cv-intro {
+      font-size: 15px;
+      color: #3c3c3c;
+      line-height: 1.9;
+      max-width: 700px;
+      margin-bottom: 48px;
+    }
+    .cv-block {
+      max-width: 700px;
+      margin-bottom: 36px;
+    }
+    .cv-label {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .cv-entry {
+      font-size: 14px;
+      line-height: 1.85;
+      color: #3c3c3c;
     }
   </style>
 </head>
@@ -480,7 +514,7 @@
   <!-- Nav links — collapses on mobile, always visible on desktop -->
   <div class="nav-body">
 
-    <a href="#work" class="nav-h1">Work</a>
+    <a href="#work" class="nav-h1" id="nav-work-link">Work</a>
 
     <div class="nav-l2">
 
@@ -508,6 +542,8 @@
       <a href="#work-walking-on-beach" class="nav-h2"><span class="nav-year">2010</span>Walking on the beach</a>
 
     </div>
+
+    <a href="#cv" class="nav-h1" id="nav-cv-link">CV</a>
 
     <!-- ← Contact email at bottom of sidebar -->
     <div class="nav-email">
@@ -749,15 +785,74 @@
     </div>
 
   </section>
+
+  <section id="cv">
+    <div class="label-h1">CV</div>
+
+    <p class="cv-intro">Currently in Rijksakademie, Amsterdam.</p>
+
+    <div class="cv-block">
+      <span class="cv-label">Education</span>
+      <p class="cv-entry">
+        M.A., New Media Art, National Taiwan University of Art, 2016<br>
+        B.A., Fine Art, National Normal University, 2010
+      </p>
+    </div>
+
+    <div class="cv-block">
+      <span class="cv-label">Solo Show</span>
+      <p class="cv-entry">
+        2026 Screen Melancholy, Palazzo delle Prigioni, Venice, Italy<br>
+        2025 Last Warning, Institut d'art contemporain de Villeurbanne, Lyon, France<br>
+        2023 SAVE AS, VT ARTSALON, Taipei<br>
+        2019 Shelter of CHAOS.zip, Digital Art Center, Taipei, Taiwan<br>
+        2015 Rest in pieces, FreesArt space, Taipei, Taiwan
+      </p>
+    </div>
+
+    <div class="cv-block">
+      <span class="cv-label">Select Group Show</span>
+      <p class="cv-entry">
+        2025 14th Mercosul Biennial, Institute of Contemporary Art (IAC), Lyon, France<br>
+        2025 iwillmedievalfutureyou2, Lilith Performance Studio, Sweden<br>
+        2024 Dreamscreen, Leeum Museum of Art, Seoul<br>
+        2024 ICC Annual 2024: Faraway, so close, NTTICC, Tokyo<br>
+        2024 Hardcore drive, TOFU space, Copenhagen<br>
+        2023 Small World — 2023 Taipei Biennial, Taipei Fine Arts Museum, Taiwan<br>
+        2023 Fever Genesis, Culture Lab LIC–Gallery, New York<br>
+        2021 Phantasmapolis Asian Art Biennial, National Taiwan Museum of Fine Art, Taiwan<br>
+        2020 Digital Art Festival, LOVE01, Songshan Cultural and Creative Park, Taipei, Taiwan<br>
+        2020 Taiwan Biennial: Sub Zoology, National Taiwan Museum of Fine Art, Taiwan<br>
+        2017 Next Art Tainan, Asir Art Museum, Tainan, Taiwan<br>
+        2017 Rhetoric of Shame, Kuandu Museum of Fine Arts, Taipei, Taiwan<br>
+        2013 Data-Neurons, Songshan Cultural and Creative Park, Taipei, Taiwan
+      </p>
+    </div>
+
+    <div class="cv-block">
+      <span class="cv-label">Awards</span>
+      <p class="cv-entry">
+        Golden Harvest Awards, 2024<br>
+        Taishin Arts Award, 2022<br>
+        Kaohsiung Award, 2020<br>
+        Next Art Tainan, 2017<br>
+        S-An Cultural Foundation Awards, 2017<br>
+        Digital Art Awards Taipei, 2013<br>
+        S-An Cultural Foundation Awards, 2013
+      </p>
+    </div>
+  </section>
+
 </main>
 
 <script>
   /* ── scroll-tracking & trilogy toggle — no need to edit ── */
   const trilogyToggle = document.querySelector('.trilogy-toggle');
   const trilogyL3    = document.getElementById('trilogy-l3');
-  const navH1   = document.querySelector('.nav-h1');
-  const navH2s  = document.querySelectorAll('.nav-h2');
-  const navH3s  = document.querySelectorAll('.nav-h3');
+  const navH1      = document.getElementById('nav-work-link');
+  const navCvLink  = document.getElementById('nav-cv-link');
+  const navH2s     = document.querySelectorAll('.nav-h2');
+  const navH3s     = document.querySelectorAll('.nav-h3');
 
   function openTrilogy() {
     trilogyL3.classList.add('open');
@@ -777,6 +872,7 @@
 
   function clearActive() {
     navH1.classList.remove('active');
+    navCvLink.classList.remove('active');
     navH2s.forEach(a => a.classList.remove('active'));
     navH3s.forEach(a => a.classList.remove('active'));
   }
@@ -830,6 +926,17 @@
       const el = document.getElementById(id);
       if (el) h3Obs.observe(el);
     });
+
+  const cvObs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      clearActive();
+      navCvLink.classList.add('active');
+    });
+  }, { rootMargin: OBS_MARGIN });
+
+  const cvSection = document.getElementById('cv');
+  if (cvSection) cvObs.observe(cvSection);
 
   /* ── mobile hamburger menu ── */
   const hamburger = document.querySelector('.nav-hamburger');
