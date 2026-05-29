@@ -201,19 +201,19 @@
       angularLimits.push({ bodyA: bA, bodyB: bB, min: min, max: max, k: k || 0.35 });
     }
     const DEG = Math.PI / 180;
-    addLimit(chest,     head,       -40 * DEG,  40 * DEG, 0.55);  // neck
-    addLimit(chest,     midTorso,   -10 * DEG,  10 * DEG, 0.55);  // upper waist
-    addLimit(midTorso,  pelvis,     -10 * DEG,  10 * DEG, 0.55);  // lower waist
-    addLimit(chest,     upperArmL,   -30 * DEG, 180 * DEG, 0.45);  // shoulder L
-    addLimit(chest,     upperArmR, -180 * DEG,   30 * DEG, 0.45);  // shoulder R
-    addLimit(upperArmL, lowerArmL,  -10 * DEG, 120 * DEG, 0.4);   // elbow L
-    addLimit(upperArmR, lowerArmR,  -10 * DEG, 120 * DEG, 0.4);   // elbow R
-    addLimit(lowerArmL, handL,      -60 * DEG,  60 * DEG, 0.3);   // wrist L
-    addLimit(lowerArmR, handR,      -60 * DEG,  60 * DEG, 0.3);   // wrist R
-    addLimit(pelvis,    upperLegL,  -30 * DEG, 100 * DEG, 0.55);  // hip L
-    addLimit(pelvis,    upperLegR,  -30 * DEG, 100 * DEG, 0.55);  // hip R
-    addLimit(upperLegL, lowerLegL,  -10 * DEG, 140 * DEG, 0.3);   // knee L
-    addLimit(upperLegR, lowerLegR,  -10 * DEG, 140 * DEG, 0.3);   // knee R
+    addLimit(chest,     head,        -40 * DEG,  40 * DEG, 0.32);  // neck
+    addLimit(chest,     midTorso,    -10 * DEG,  10 * DEG, 0.28);  // upper waist
+    addLimit(midTorso,  pelvis,      -10 * DEG,  10 * DEG, 0.28);  // lower waist
+    addLimit(chest,     upperArmL,   -30 * DEG, 180 * DEG, 0.28);  // shoulder L
+    addLimit(chest,     upperArmR,  -180 * DEG,  30 * DEG, 0.28);  // shoulder R
+    addLimit(upperArmL, lowerArmL,   -10 * DEG, 120 * DEG, 0.22);  // elbow L
+    addLimit(upperArmR, lowerArmR,   -10 * DEG, 120 * DEG, 0.22);  // elbow R
+    addLimit(lowerArmL, handL,       -60 * DEG,  60 * DEG, 0.16);  // wrist L
+    addLimit(lowerArmR, handR,       -60 * DEG,  60 * DEG, 0.16);  // wrist R
+    addLimit(pelvis,    upperLegL,   -30 * DEG, 100 * DEG, 0.28);  // hip L
+    addLimit(pelvis,    upperLegR,   -30 * DEG, 100 * DEG, 0.28);  // hip R
+    addLimit(upperLegL, lowerLegL,   -10 * DEG, 140 * DEG, 0.18);  // knee L
+    addLimit(upperLegR, lowerLegR,   -10 * DEG, 140 * DEG, 0.18);  // knee R
   }
 
   // --- Manual sleep ---
@@ -233,11 +233,12 @@
       while (rel < -Math.PI) rel += 2 * Math.PI;
 
       if (rel > lim.max) {
+        // Damp existing angular velocity while pushing back — prevents P-only oscillation
         Body.setAngularVelocity(lim.bodyB,
-          lim.bodyB.angularVelocity - (rel - lim.max) * lim.k);
+          lim.bodyB.angularVelocity * 0.8 - (rel - lim.max) * lim.k);
       } else if (rel < lim.min) {
         Body.setAngularVelocity(lim.bodyB,
-          lim.bodyB.angularVelocity - (rel - lim.min) * lim.k);
+          lim.bodyB.angularVelocity * 0.8 - (rel - lim.min) * lim.k);
       }
     });
   });
@@ -258,6 +259,7 @@
     } else {
       sleepFrames  = 0;
       puppetAsleep = false;
+      scheduleFrame(); // physics became active — ensure render loop is running
     }
   });
 
@@ -437,6 +439,11 @@
 
   // --- Render loop ---
   let lastDrawScrollY = window.scrollY;
+  let rafActive = false;
+
+  function scheduleFrame() {
+    if (!rafActive) { rafActive = true; requestAnimationFrame(drawFrame); }
+  }
 
   function drawFrame() {
     const scrollDelta = window.scrollY - lastDrawScrollY;
@@ -450,9 +457,22 @@
     updatePageBodies();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawPuppet();
-    requestAnimationFrame(drawFrame);
+
+    if (puppetAsleep && !anyDragging()) {
+      rafActive = false; // pause until woken
+    } else {
+      requestAnimationFrame(drawFrame);
+    }
   }
-  requestAnimationFrame(drawFrame);
+  scheduleFrame();
+
+  // PC scroll shifts the puppet — restart loop so the position update renders
+  if (!IS_MOBILE) window.addEventListener('scroll', scheduleFrame, { passive: true });
+
+  // Restart after tab switch (browser pauses RAF while hidden)
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) scheduleFrame();
+  });
 
   // --- Drag (multi-touch: one constraint per active pointer/touch) ---
   const dragConstraints = {};
@@ -478,6 +498,7 @@
   function startDrag(px, py, target, id) {
     puppetAsleep = false;
     sleepFrames  = 0;
+    scheduleFrame();
     const anchor = Bodies.circle(px, py, 1, {
       isStatic: true, collisionFilter: { mask: 0 }, label: 'anchor',
     });
