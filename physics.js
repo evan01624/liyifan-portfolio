@@ -4,7 +4,7 @@
   const { Engine, Runner, Bodies, Body, Composite, Constraint, Events } = Matter;
 
   const IS_MOBILE     = window.innerWidth <= 768 || ('ontouchstart' in window);
-  const MOBILE_SCALE  = 0.78;
+  const MOBILE_SCALE  = 0.936;
 
   // --- Canvas overlay ---
   const canvas = document.createElement('canvas');
