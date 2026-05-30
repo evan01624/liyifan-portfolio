@@ -29,7 +29,7 @@
       --faint:  #c0c0c0;  /* inactive nav links */
       --border: #e4e4e4;  /* dividing lines */
       --bg:     #fff;     /* page background */
-      --nav-w:  350px;    /* left sidebar width */
+      --nav-w:  clamp(220px, 24.3vw, 350px); /* left sidebar width — 350px at ≥1440px */
       --link:   #0000EE;  /* classic hyperlink blue */
     }
 
@@ -180,7 +180,7 @@
 
     main {
       margin-left: var(--nav-w);
-      padding: 72px 64px 160px 72px; /* ← content padding: top right bottom left */
+      padding: 72px clamp(24px, 4.44vw, 64px) 160px clamp(36px, 5vw, 72px); /* ← content padding: top right bottom left */
       /* max-width removed — content fills full screen width */
     }
 
@@ -335,6 +335,14 @@
       object-fit: cover;
       object-position: center;
       display: block;
+    }
+
+    /* ══════════════ WINDOWED DESKTOP (801–1200px) ══════════════ */
+    @media (max-width: 1200px) and (min-width: 801px) {
+      .work, .trilogy-statement {
+        grid-template-columns: 1fr clamp(200px, 38vw, 520px);
+        column-gap: 32px;
+      }
     }
 
     /* ══════════════════ MOBILE (screen ≤ 800px) ══════════════════ */
