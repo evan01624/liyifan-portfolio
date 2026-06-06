@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Generate Texture Templates</title>
+<style>
+  body { font-family: monospace; padding: 20px; background: #f5f5f5; }
+  h2 { margin-bottom: 8px; }
+  p { color: #555; margin: 0 0 16px; }
+  #grid { display: flex; flex-wrap: wrap; gap: 12px; }
+  .item { text-align: center; }
+  .item span { display: block; font-size: 11px; color: #777; margin-top: 4px; }
+  button { padding: 10px 24px; font-size: 14px; background: #4488cc; color: #fff;
+           border: none; border-radius: 4px; cursor: pointer; margin-bottom: 24px; }
+  button:hover { background: #3366aa; }
+</style>
+</head>
+<body>
+<h2>Puppet Texture Templates</h2>
+<p>Click "Download All" to save 12 PNG templates (4× resolution) into your textures/ folder.
+   Coloured dots = joint connection points. Draw your artwork within the bounding box.</p>
+<button onclick="downloadAll()">Download All (12 PNGs)</button>
+<div id="grid"></div>
+
+<script>
+const S = 4;
+
+const PARTS = [
+  { name:'head',      w:55,  h:60,
+    joints:[{x:0,y:30,c:'#e05050',lbl:'neck'}] },
+  { name:'chest',     w:70,  h:72,
+    joints:[{x:0,y:-36,c:'#e05050',lbl:'neck'},{x:0,y:36,c:'#4499dd',lbl:'waist'},
+            {x:-35,y:-21,c:'#44bb44',lbl:'shldr L'},{x:35,y:-21,c:'#44bb44',lbl:'shldr R'}] },
+  { name:'midTorso',  w:65,  h:55,
+    joints:[{x:0,y:-27.5,c:'#4499dd',lbl:'waist'},{x:0,y:27.5,c:'#4499dd',lbl:'waist'}] },
+  { name:'pelvis',    w:68,  h:60,
+    joints:[{x:0,y:-30,c:'#4499dd',lbl:'waist'},{x:-16,y:30,c:'#ddaa22',lbl:'hip L'},{x:16,y:30,c:'#ddaa22',lbl:'hip R'}] },
+  { name:'upperArmL', w:28,  h:100,
+    joints:[{x:0,y:-50,c:'#44bb44',lbl:'shoulder'},{x:0,y:50,c:'#bb44bb',lbl:'elbow'}] },
+  { name:'upperArmR', w:28,  h:100,
+    joints:[{x:0,y:-50,c:'#44bb44',lbl:'shoulder'},{x:0,y:50,c:'#bb44bb',lbl:'elbow'}] },
+  { name:'lowerArmL', w:22,  h:85,
+    joints:[{x:0,y:-42.5,c:'#bb44bb',lbl:'elbow'},{x:0,y:42.5,c:'#aaaaaa',lbl:'wrist'}] },
+  { name:'lowerArmR', w:22,  h:85,
+    joints:[{x:0,y:-42.5,c:'#bb44bb',lbl:'elbow'},{x:0,y:42.5,c:'#aaaaaa',lbl:'wrist'}] },
+  { name:'upperLegL', w:32,  h:115,
+    joints:[{x:0,y:-57.5,c:'#ddaa22',lbl:'hip'},{x:0,y:57.5,c:'#22aadd',lbl:'knee'}] },
+  { name:'upperLegR', w:32,  h:115,
+    joints:[{x:0,y:-57.5,c:'#ddaa22',lbl:'hip'},{x:0,y:57.5,c:'#22aadd',lbl:'knee'}] },
+  { name:'lowerLegL', w:28,  h:100,
+    joints:[{x:0,y:-50,c:'#22aadd',lbl:'knee'},{x:0,y:50,c:'#aaaaaa',lbl:'ankle'}] },
+  { name:'lowerLegR', w:28,  h:100,
+    joints:[{x:0,y:-50,c:'#22aadd',lbl:'knee'},{x:0,y:50,c:'#aaaaaa',lbl:'ankle'}] },
+];
+
+function drawTemplate(part) {
+  const W = part.w * S, H = part.h * S;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+
+  // White background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // Shape tint
+  ctx.fillStyle = 'rgba(190,215,235,0.35)';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid (8px at 1×)
+  ctx.strokeStyle = 'rgba(150,190,220,0.3)';
+  ctx.lineWidth = 1;
+  for (let x = 8*S; x < W; x += 8*S) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y = 8*S; y < H; y += 8*S) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+  // Centre crosshair
+  ctx.strokeStyle = 'rgba(100,150,200,0.45)';
+  ctx.setLineDash([6,6]);
+  ctx.beginPath(); ctx.moveTo(W/2,0); ctx.lineTo(W/2,H);
+  ctx.moveTo(0,H/2); ctx.lineTo(W,H/2); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Border
+  ctx.strokeStyle = '#7aabcc'; ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, W-2, H-2);
+
+  // Joint dots
+  for (const j of part.joints) {
+    const jx = W/2 + j.x*S, jy = H/2 + j.y*S;
+    ctx.beginPath(); ctx.arc(jx, jy, 7, 0, Math.PI*2);
+    ctx.fillStyle = j.c; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = j.c; ctx.font = 'bold 11px monospace';
+    const tx = jx + (jx > W/2 ? -ctx.measureText(j.lbl).width - 12 : 12);
+    ctx.fillText(j.lbl, tx, jy + 4);
+  }
+
+  // Label
+  ctx.fillStyle = 'rgba(30,70,120,0.7)';
+  ctx.font = 'bold 13px monospace'; ctx.fillText(part.name, 6, 17);
+  ctx.font = '11px monospace'; ctx.fillText(`${part.w}×${part.h}px`, 6, 31);
+
+  return cv;
+}
+
+function downloadAll() {
+  PARTS.forEach((part, i) => {
+    setTimeout(() => {
+      const cv = drawTemplate(part);
+      const a = document.createElement('a');
+      a.download = part.name + '.png';
+      a.href = cv.toDataURL('image/png');
+      a.click();
+    }, i * 120);
+  });
+}
+
+// Render previews
+const grid = document.getElementById('grid');
+PARTS.forEach(part => {
+  const cv = drawTemplate(part);
+  cv.style.cssText = 'border:1px solid #ccc;display:block;max-width:100%';
+  const wrap = document.createElement('div');
+  wrap.className = 'item';
+  wrap.appendChild(cv);
+  const lbl = document.createElement('span');
+  lbl.textContent = part.name + ' · ' + part.w + '×' + part.h;
+  wrap.appendChild(lbl);
+  grid.appendChild(wrap);
+});
+</script>
+</body>
+</html>

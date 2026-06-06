@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Puppet Layout Editor</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #222; color: #ddd; font-family: monospace; font-size: 13px;
+       display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+#toolbar { display: flex; align-items: center; gap: 7px; padding: 7px 12px;
+           background: #1a1a1a; border-bottom: 1px solid #333; flex-shrink: 0; flex-wrap: wrap; }
+button { padding: 4px 11px; background: #3a6ea8; color: #fff; border: none;
+         border-radius: 3px; cursor: pointer; font-size: 12px; }
+button:hover { background: #4a7ec8; }
+button.sec      { background: #484848; }
+button.sec:hover { background: #585858; }
+button.on       { background: #3a7a40; }
+button.on:hover  { background: #4a8a50; }
+#hint { color: #444; font-size: 11px; margin-left: 4px; }
+
+#main { display: flex; flex: 1; overflow: hidden; }
+#canvas-wrap { flex: 1; overflow: auto; display: flex; align-items: flex-start;
+               justify-content: center; padding: 16px; background: #1a1a1a; }
+canvas { display: block; background: #282828; border: 1px solid #3a3a3a; }
+
+/* Sidebar */
+#sidebar { width: 220px; background: #1e1e1e; border-left: 1px solid #333;
+           overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+
+/* Selected part panel */
+#sel-panel { padding: 10px 12px; border-bottom: 1px solid #2a2a2a; }
+#sel-panel h3 { font-size: 11px; color: #888; margin-bottom: 9px;
+                text-transform: uppercase; letter-spacing: 1px; }
+.field { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.field label { color: #666; font-size: 12px; }
+.field input  { width: 74px; padding: 3px 5px; background: #2a2a2a; color: #ddd;
+                border: 1px solid #444; border-radius: 2px; text-align: right; font-size: 12px; }
+.field input:focus { border-color: #66aaff; outline: none; }
+.field input[readonly] { color: #888; background: #232323; border-color: #333; cursor: default; }
+.tex-tag { font-size: 10px; color: #5a8; margin-left: 4px; }
+
+/* Accordion sections */
+details { border-top: 1px solid #2a2a2a; }
+details summary { padding: 8px 12px; font-size: 11px; color: #777; cursor: pointer;
+                  text-transform: uppercase; letter-spacing: 1px; user-select: none;
+                  display: flex; align-items: center; gap: 6px; }
+details summary:hover { color: #aaa; }
+details summary::marker { content: ''; }
+details summary::before { content: '▶'; font-size: 9px; color: #555;
+                           display: inline-block; transition: transform 0.15s; }
+details[open] summary::before { transform: rotate(90deg); }
+details .sec-body { padding: 6px 12px 10px; }
+
+/* Layer list */
+#layer-list { }
+.li { display: flex; align-items: center; gap: 5px; padding: 3px 0; cursor: grab;
+      border-radius: 2px; font-size: 11px; color: #888; user-select: none; }
+.li:hover { color: #ccc; }
+.li.drag-over { border-top: 2px solid #66aaff; }
+.li.dragging  { opacity: 0.35; }
+.grip { color: #3a3a3a; font-size: 13px; line-height: 1; flex-shrink: 0; }
+.li:hover .grip { color: #666; }
+.idx  { color: #3a3a3a; font-size: 10px; width: 14px; text-align: right;
+        flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+/* Joint list */
+#joint-list { font-size: 11px; color: #666; }
+.jr { display: flex; align-items: flex-start; gap: 5px; padding: 2px 0; }
+.jr.ov > .jrtext { color: #99bbdd; }
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+.jrtext { cursor: pointer; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <strong style="color:#777;margin-right:2px">Puppet Editor</strong>
+  <button onclick="saveConfig()">💾 Save</button>
+  <button class="sec" onclick="triggerLoad()">📂 Load</button>
+  <input id="file-input" type="file" accept=".json" style="display:none">
+  <button onclick="downloadLayout()">🖼 Layout</button>
+  <button onclick="downloadAllPNGs()">📦 Templates</button>
+  <button class="sec" id="btn-tex" onclick="toggleTex()">Texture</button>
+  <button class="sec" onclick="resetToDefaults()">↺ Reset</button>
+  <span id="hint">Click: select · Drag body: move · Corner: resize · Drag joint ●: reposition</span>
+</div>
+
+<div id="main">
+  <div id="canvas-wrap"><canvas id="editor"></canvas></div>
+
+  <div id="sidebar">
+
+    <!-- Selected part panel -->
+    <div id="sel-panel" style="display:none">
+      <h3 id="sel-name">—</h3>
+      <div class="field">
+        <label>Width <span id="tex-w" class="tex-tag" style="display:none">tex</span></label>
+        <input id="inp-w" type="number" min="4" step="1" onchange="applyInput('w')">
+      </div>
+      <div class="field">
+        <label>Height <span id="tex-h" class="tex-tag" style="display:none">tex</span></label>
+        <input id="inp-h" type="number" min="4" step="1" onchange="applyInput('h')">
+      </div>
+      <div class="field">
+        <label>dx</label>
+        <input id="inp-dx" type="number" step="0.5" onchange="applyInput('dx')">
+      </div>
+      <div class="field">
+        <label>dy</label>
+        <input id="inp-dy" type="number" step="0.5" onchange="applyInput('dy')">
+      </div>
+    </div>
+
+    <!-- Layer order -->
+    <details open>
+      <summary>Layers <small style="text-transform:none;letter-spacing:0;font-size:10px;color:#3a3a3a">front → back</small></summary>
+      <div class="sec-body" style="padding-top:3px;padding-bottom:6px">
+        <div id="layer-list"></div>
+      </div>
+    </details>
+
+    <!-- Joints -->
+    <details>
+      <summary>Joints <small style="text-transform:none;letter-spacing:0;font-size:10px;color:#3a3a3a">* = custom · dbl-click to reset</small></summary>
+      <div class="sec-body">
+        <div id="joint-list"></div>
+      </div>
+    </details>
+
+  </div>
+</div>
+
+<script>
+// ─── Constants ───────────────────────────────────────────────────────────────
+const SCALE     = 1.4;
+const OX = 270, OY = 28;
+const CV_W = 540, CV_H = 730;
+const HANDLE_R  = 6;
+const JOINT_HIT = 8;
+const TEX_SCALE = 4;   // texture px → physics px ratio
+
+// Default part geometry (w/h in physics px = texture px / TEX_SCALE)
+const DEFAULTS = {
+  head:      { w: 55,  h:  60, dx:   0, dy:   30   },
+  chest:     { w: 70,  h:  72, dx:   0, dy:   96   },
+  midTorso:  { w: 65,  h:  55, dx:   0, dy:  159.5 },
+  pelvis:    { w: 68,  h:  60, dx:   0, dy:  217   },
+  upperArmL: { w: 28,  h: 100, dx: -51, dy:  110   },
+  upperArmR: { w: 28,  h: 100, dx:  51, dy:  110   },
+  lowerArmL: { w: 22,  h:  85, dx: -51, dy: 202.5  },
+  lowerArmR: { w: 22,  h:  85, dx:  51, dy: 202.5  },
+  handL:     { w: 30,  h:  22, dx: -51, dy:  256   },
+  handR:     { w: 30,  h:  22, dx:  51, dy:  256   },
+  upperLegL: { w: 32,  h: 115, dx: -18, dy: 304.5  },
+  upperLegR: { w: 32,  h: 115, dx:  18, dy: 304.5  },
+  lowerLegL: { w: 28,  h: 100, dx: -18, dy:  412   },
+  lowerLegR: { w: 28,  h: 100, dx:  18, dy:  412   },
+};
+
+const DEFAULT_DRAW_ORDER = [
+  'lowerLegL','lowerLegR',
+  'lowerArmL','lowerArmR','handL','handR',
+  'upperLegL','upperLegR','upperArmL','upperArmR',
+  'pelvis','midTorso','chest','head',
+];
+
+const PART_COLORS = {
+  head:'#b8cfe0',      chest:'#8aadcc',    midTorso:'#7a9dbc', pelvis:'#6a8dac',
+  upperArmL:'#9ab8cc', upperArmR:'#9ab8cc',
+  lowerArmL:'#8aaabb', lowerArmR:'#8aaabb',
+  handL:'#7a9aaa',     handR:'#7a9aaa',
+  upperLegL:'#99b0c4', upperLegR:'#99b0c4',
+  lowerLegL:'#8aa0b4', lowerLegR:'#8aa0b4',
+};
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let parts         = JSON.parse(JSON.stringify(DEFAULTS));
+let drawOrder     = DEFAULT_DRAW_ORDER.slice();   // back→front
+let selected      = null;
+let drag          = null;
+let jointOverrides = {};
+let showTex       = false;
+const texFromImg  = {};   // name → true when texture set part dimensions
+
+// ─── Canvas ──────────────────────────────────────────────────────────────────
+const cv  = document.getElementById('editor');
+cv.width  = CV_W;
+cv.height = CV_H;
+const ctx = cv.getContext('2d');
+
+// ─── Texture loading ─────────────────────────────────────────────────────────
+// Textures also drive part dimensions: physicsSize = texturePx / TEX_SCALE
+const TEX_IMGS = {};
+Object.keys(DEFAULTS).forEach(function(name) {
+  const img = new Image();
+  img.onload = function() {
+    const tw = img.naturalWidth  / TEX_SCALE;
+    const th = img.naturalHeight / TEX_SCALE;
+    if (tw > 0 && th > 0) {
+      parts[name].w = tw;
+      parts[name].h = th;
+      texFromImg[name] = true;
+      if (selected === name) updateSidebarPanel();
+    }
+  };
+  img.src = 'textures/' + name + '.png';
+  TEX_IMGS[name] = img;
+});
+
+// ─── Coordinate helpers ───────────────────────────────────────────────────────
+function pRect(name) {
+  const p = parts[name];
+  return { cx: OX+p.dx*SCALE, cy: OY+p.dy*SCALE, w: p.w*SCALE, h: p.h*SCALE };
+}
+function corners(name) {
+  const r = pRect(name);
+  return { TL:{x:r.cx-r.w/2,y:r.cy-r.h/2}, TR:{x:r.cx+r.w/2,y:r.cy-r.h/2},
+           BL:{x:r.cx-r.w/2,y:r.cy+r.h/2}, BR:{x:r.cx+r.w/2,y:r.cy+r.h/2} };
+}
+function jCanvasPt(bName, lx, ly) {
+  const p = parts[bName];
+  return { x: OX+(p.dx+lx)*SCALE, y: OY+(p.dy+ly)*SCALE };
+}
+
+// ─── Joint definitions ────────────────────────────────────────────────────────
+// Shoulder attachment y: arm top (+15px) relative to chest center, clamped to chest bounds.
+function clampY(anchor, mover) {
+  const rel = (parts[mover].dy - parts[mover].h/2 + 15) - parts[anchor].dy;
+  return Math.max(-parts[anchor].h/2, Math.min(parts[anchor].h/2, rel));
+}
+
+function computeJoints() {
+  const p = parts;
+  return [
+    { id:'neck',       c:'#e05050', bA:'head',      pA:[0,  p.head.h/2],
+                                    bB:'chest',     pB:[0, -p.chest.h/2]                          },
+    { id:'upperWaist', c:'#4499dd', bA:'chest',     pA:[0,  p.chest.h/2],
+                                    bB:'midTorso',  pB:[0, -p.midTorso.h/2]                       },
+    { id:'lowerWaist', c:'#4499dd', bA:'midTorso',  pA:[0,  p.midTorso.h/2],
+                                    bB:'pelvis',    pB:[0, -p.pelvis.h/2]                         },
+    { id:'shoulderL',  c:'#44bb44', bA:'chest',     pA:[-p.chest.w/2, clampY('chest','upperArmL')],
+                                    bB:'upperArmL', pB:[0, -p.upperArmL.h/2]                      },
+    { id:'shoulderR',  c:'#44bb44', bA:'chest',     pA:[+p.chest.w/2, clampY('chest','upperArmR')],
+                                    bB:'upperArmR', pB:[0, -p.upperArmR.h/2]                      },
+    { id:'elbowL',     c:'#bb44bb', bA:'upperArmL', pA:[0,  p.upperArmL.h/2],
+                                    bB:'lowerArmL', pB:[0, -p.lowerArmL.h/2]                      },
+    { id:'elbowR',     c:'#bb44bb', bA:'upperArmR', pA:[0,  p.upperArmR.h/2],
+                                    bB:'lowerArmR', pB:[0, -p.lowerArmR.h/2]                      },
+    { id:'wristL',     c:'#ccbbaa', bA:'lowerArmL', pA:[0,  p.lowerArmL.h/2],
+                                    bB:'handL',     pB:[0, -p.handL.h/2]                          },
+    { id:'wristR',     c:'#ccbbaa', bA:'lowerArmR', pA:[0,  p.lowerArmR.h/2],
+                                    bB:'handR',     pB:[0, -p.handR.h/2]                          },
+    { id:'hipL',       c:'#ddaa22', bA:'pelvis',    pA:[p.upperLegL.dx-p.pelvis.dx, p.pelvis.h/2],
+                                    bB:'upperLegL', pB:[0, -p.upperLegL.h/2]                      },
+    { id:'hipR',       c:'#ddaa22', bA:'pelvis',    pA:[p.upperLegR.dx-p.pelvis.dx, p.pelvis.h/2],
+                                    bB:'upperLegR', pB:[0, -p.upperLegR.h/2]                      },
+    { id:'kneeL',      c:'#22aadd', bA:'upperLegL', pA:[0,  p.upperLegL.h/2],
+                                    bB:'lowerLegL', pB:[0, -p.lowerLegL.h/2]                      },
+    { id:'kneeR',      c:'#22aadd', bA:'upperLegR', pA:[0,  p.upperLegR.h/2],
+                                    bB:'lowerLegR', pB:[0, -p.lowerLegR.h/2]                      },
+  ];
+}
+
+function resolvedJoints() {
+  return computeJoints().map(function(j) {
+    const ov = jointOverrides[j.id] || {};
+    return Object.assign({}, j, {
+      pA: ov.pA ? ov.pA.slice() : j.pA,
+      pB: ov.pB ? ov.pB.slice() : j.pB,
+    });
+  });
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function rrect(c2, cx, cy, w, h, r, fill, stroke, lw) {
+  c2.beginPath();
+  if (c2.roundRect) c2.roundRect(cx-w/2, cy-h/2, w, h, r);
+  else c2.rect(cx-w/2, cy-h/2, w, h);
+  if (fill)   { c2.fillStyle=fill;   c2.fill(); }
+  if (stroke) { c2.strokeStyle=stroke; c2.lineWidth=lw||1; c2.stroke(); }
+}
+
+function render(c2, showUI) {
+  c2.clearRect(0, 0, CV_W, CV_H);
+
+  if (showUI) {
+    c2.strokeStyle='rgba(255,255,255,0.03)'; c2.lineWidth=1;
+    for (let x=0;x<CV_W;x+=20){c2.beginPath();c2.moveTo(x,0);c2.lineTo(x,CV_H);c2.stroke();}
+    for (let y=0;y<CV_H;y+=20){c2.beginPath();c2.moveTo(0,y);c2.lineTo(CV_W,y);c2.stroke();}
+  }
+
+  const joints = resolvedJoints();
+
+  // Constraint lines
+  joints.forEach(function(j) {
+    const a=jCanvasPt(j.bA,j.pA[0],j.pA[1]), b=jCanvasPt(j.bB,j.pB[0],j.pB[1]);
+    c2.beginPath(); c2.moveTo(a.x,a.y); c2.lineTo(b.x,b.y);
+    c2.strokeStyle=j.c+'44'; c2.lineWidth=1.5; c2.stroke();
+  });
+
+  // Parts (back to front per drawOrder)
+  drawOrder.forEach(function(name) {
+    if (!parts[name]) return;
+    const r=pRect(name), isSel=showUI&&name===selected;
+    c2.save();
+    if (isSel) { c2.shadowColor='rgba(80,160,255,0.4)'; c2.shadowBlur=14; }
+    const img=TEX_IMGS[name];
+    if (showTex && img && img.complete && img.naturalWidth>0) {
+      c2.drawImage(img, r.cx-r.w/2, r.cy-r.h/2, r.w, r.h);
+    } else {
+      rrect(c2, r.cx, r.cy, r.w, r.h, 4,
+        PART_COLORS[name]+(isSel?'ff':'cc'),
+        isSel?'#66aaff':'rgba(255,255,255,0.15)',
+        isSel?1.5:1);
+    }
+    c2.restore();
+    if (showUI) {
+      c2.fillStyle = showTex ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.35)';
+      c2.font='9px monospace';
+      c2.fillText(name, r.cx-r.w/2+3, r.cy-r.h/2+11);
+      if (isSel) rrect(c2, r.cx, r.cy, r.w, r.h, 4, null, '#66aaff', 1.5);
+    }
+  });
+
+  // Joint dots
+  if (showUI) {
+    joints.forEach(function(j) {
+      [['pA',j.bA,j.pA,5,'ff'],['pB',j.bB,j.pB,3.5,'77']].forEach(function(e) {
+        const pt=jCanvasPt(e[1],e[2][0],e[2][1]);
+        const ov=!!(jointOverrides[j.id]&&jointOverrides[j.id][e[0]]);
+        c2.beginPath(); c2.arc(pt.x,pt.y,e[3],0,Math.PI*2);
+        c2.fillStyle=j.c+e[4]; c2.fill();
+        c2.strokeStyle=ov?'#fff':'rgba(0,0,0,0.4)'; c2.lineWidth=ov?1.5:0.5; c2.stroke();
+      });
+    });
+  } else {
+    joints.forEach(function(j) {
+      [[j.bA,j.pA],[j.bB,j.pB]].forEach(function(ep) {
+        const pt=jCanvasPt(ep[0],ep[1][0],ep[1][1]);
+        c2.beginPath(); c2.arc(pt.x,pt.y,4,0,Math.PI*2);
+        c2.fillStyle=j.c; c2.fill();
+        c2.strokeStyle='rgba(0,0,0,0.35)'; c2.lineWidth=0.5; c2.stroke();
+      });
+    });
+  }
+
+  // Resize handles (selected only)
+  if (showUI && selected) {
+    Object.values(corners(selected)).forEach(function(pt) {
+      c2.beginPath(); c2.arc(pt.x,pt.y,HANDLE_R,0,Math.PI*2);
+      c2.fillStyle='#66aaff'; c2.fill();
+      c2.strokeStyle='#fff'; c2.lineWidth=1.5; c2.stroke();
+    });
+  }
+}
+
+function loop() { render(ctx, true); requestAnimationFrame(loop); }
+loop();
+
+// ─── Interaction ──────────────────────────────────────────────────────────────
+function mpos(e) {
+  const r=cv.getBoundingClientRect();
+  return { x:e.clientX-r.left, y:e.clientY-r.top };
+}
+function hitJoint(mx, my) {
+  let best=null, bestD=JOINT_HIT;
+  resolvedJoints().forEach(function(j) {
+    [['pA',j.bA,j.pA],['pB',j.bB,j.pB]].forEach(function(e) {
+      const pt=jCanvasPt(e[1],e[2][0],e[2][1]);
+      const d=Math.hypot(mx-pt.x, my-pt.y);
+      if (d<bestD) { bestD=d; best={id:j.id,endpoint:e[0],bodyName:e[1]}; }
+    });
+  });
+  return best;
+}
+function hitHandle(mx, my) {
+  if (!selected) return null;
+  for (const [k,pt] of Object.entries(corners(selected)))
+    if (Math.hypot(mx-pt.x,my-pt.y)<HANDLE_R+5) return k;
+  return null;
+}
+function hitPart(mx, my) {
+  for (const name of [...drawOrder].reverse()) {
+    if (!parts[name]) continue;
+    const r=pRect(name);
+    if (mx>=r.cx-r.w/2&&mx<=r.cx+r.w/2&&my>=r.cy-r.h/2&&my<=r.cy+r.h/2) return name;
+  }
+  return null;
+}
+
+cv.addEventListener('mousedown', function(e) {
+  const {x:mx,y:my}=mpos(e);
+  const jh=hitJoint(mx,my);
+  if (jh) { drag={mode:'joint',id:jh.id,endpoint:jh.endpoint,bodyName:jh.bodyName}; return; }
+  const h=hitHandle(mx,my);
+  if (h) {
+    const p=parts[selected];
+    drag={mode:'resize',handle:h,smx:mx,smy:my,sdx:p.dx,sdy:p.dy,sw:p.w,sh:p.h}; return;
+  }
+  const hit=hitPart(mx,my);
+  selected=hit||null;
+  if (hit) { const p=parts[hit]; drag={mode:'move',smx:mx,smy:my,sdx:p.dx,sdy:p.dy}; }
+  updateSidebar();
+});
+
+cv.addEventListener('mousemove', function(e) {
+  const {x:mx,y:my}=mpos(e);
+  if (!drag) {
+    const jh=hitJoint(mx,my);
+    if      (jh)               cv.style.cursor='crosshair';
+    else if (hitHandle(mx,my)) cv.style.cursor='nwse-resize';
+    else if (hitPart(mx,my))   cv.style.cursor='grab';
+    else                       cv.style.cursor='default';
+    return;
+  }
+  if (drag.mode==='joint') {
+    const lx=(mx-OX)/SCALE-parts[drag.bodyName].dx;
+    const ly=(my-OY)/SCALE-parts[drag.bodyName].dy;
+    if (!jointOverrides[drag.id]) jointOverrides[drag.id]={};
+    jointOverrides[drag.id][drag.endpoint]=[lx,ly];
+    renderJointList(); return;
+  }
+  const p=parts[selected];
+  if (drag.mode==='move') {
+    p.dx=drag.sdx+(mx-drag.smx)/SCALE;
+    p.dy=drag.sdy+(my-drag.smy)/SCALE;
+  } else if (drag.mode==='resize') {
+    const h=drag.handle;
+    const mwx=(mx-OX)/SCALE, mwy=(my-OY)/SCALE;
+    const fx=drag.sdx+(h.includes('L')?1:-1)*drag.sw/2;
+    const fy=drag.sdy+(h.includes('T')?1:-1)*drag.sh/2;
+    p.w=Math.max(4,Math.abs(mwx-fx)); p.h=Math.max(4,Math.abs(mwy-fy));
+    p.dx=(mwx+fx)/2; p.dy=(mwy+fy)/2;
+    texFromImg[selected]=false; // mark as manually overridden
+  }
+  updateSidebar();
+});
+
+cv.addEventListener('mouseup',    function() { drag=null; cv.style.cursor='default'; });
+cv.addEventListener('mouseleave', function() { drag=null; });
+
+// ─── Layer order drag-and-drop ────────────────────────────────────────────────
+let layerDragSrc = null;
+
+function renderLayerList() {
+  const el=document.getElementById('layer-list');
+  // Display front→back (drawOrder is back→front, so reverse for display)
+  const display=[...drawOrder].reverse();
+  el.innerHTML=display.map(function(name,i) {
+    return `<div class="li" draggable="true" data-name="${name}">`
+         + `<span class="grip">⠿</span>`
+         + `<span class="dot" style="background:${PART_COLORS[name]||'#666'}"></span>`
+         + `<span>${name}</span>`
+         + `</div>`;
+  }).join('');
+
+  el.querySelectorAll('.li').forEach(function(item) {
+    item.addEventListener('dragstart', function(e) {
+      layerDragSrc=this.dataset.name;
+      e.dataTransfer.effectAllowed='move';
+      requestAnimationFrame(()=>this.classList.add('dragging'));
+    });
+    item.addEventListener('dragend', function() {
+      this.classList.remove('dragging');
+      el.querySelectorAll('.li').forEach(i=>i.classList.remove('drag-over'));
+      layerDragSrc=null;
+    });
+    item.addEventListener('dragover', function(e) {
+      e.preventDefault(); e.dataTransfer.dropEffect='move';
+      el.querySelectorAll('.li').forEach(i=>i.classList.remove('drag-over'));
+      if (this.dataset.name!==layerDragSrc) this.classList.add('drag-over');
+    });
+    item.addEventListener('dragleave', function() { this.classList.remove('drag-over'); });
+    item.addEventListener('drop', function(e) {
+      e.preventDefault(); this.classList.remove('drag-over');
+      if (!layerDragSrc||layerDragSrc===this.dataset.name) return;
+      const disp=[...drawOrder].reverse();
+      const fi=disp.indexOf(layerDragSrc), ti=disp.indexOf(this.dataset.name);
+      disp.splice(fi,1); disp.splice(ti,0,layerDragSrc);
+      drawOrder=[...disp].reverse();
+      renderLayerList();
+    });
+  });
+}
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
+function r1(v) { return Math.round(v*10)/10; }
+
+function updateSidebar() { updateSidebarPanel(); renderLayerList(); renderJointList(); }
+
+function updateSidebarPanel() {
+  const panel=document.getElementById('sel-panel');
+  if (!selected) { panel.style.display='none'; return; }
+  panel.style.display='block';
+  document.getElementById('sel-name').textContent=selected;
+  const p=parts[selected];
+  document.getElementById('inp-w').value  = r1(p.w);
+  document.getElementById('inp-h').value  = r1(p.h);
+  document.getElementById('inp-dx').value = r1(p.dx);
+  document.getElementById('inp-dy').value = r1(p.dy);
+  const fromTex = !!texFromImg[selected];
+  document.getElementById('tex-w').style.display = fromTex ? '' : 'none';
+  document.getElementById('tex-h').style.display = fromTex ? '' : 'none';
+}
+
+function applyInput(field) {
+  if (!selected) return;
+  const p=parts[selected];
+  const v=parseFloat(document.getElementById('inp-'+field).value);
+  if (isNaN(v)) return;
+  if ((field==='w'||field==='h') && v<4) return;
+  p[field]=v;
+  if (field==='w'||field==='h') texFromImg[selected]=false;
+}
+
+function renderJointList() {
+  document.getElementById('joint-list').innerHTML=resolvedJoints().map(function(j) {
+    const ovA=!!(jointOverrides[j.id]&&jointOverrides[j.id].pA);
+    const ovB=!!(jointOverrides[j.id]&&jointOverrides[j.id].pB);
+    return `<div class="jr${ovA||ovB?' ov':''}">`
+         + `<span class="dot" style="background:${j.c}"></span>`
+         + `<span class="jrtext" ondblclick="resetJoint('${j.id}')">`
+         + `${j.id}: (${r1(j.pA[0])},${r1(j.pA[1])})${ovA?'*':''}`
+         + `→(${r1(j.pB[0])},${r1(j.pB[1])})${ovB?'*':''}`
+         + `</span></div>`;
+  }).join('');
+}
+
+updateSidebar();
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+function resetJoint(id) { delete jointOverrides[id]; renderJointList(); }
+
+function toggleTex() {
+  showTex=!showTex;
+  const btn=document.getElementById('btn-tex');
+  btn.textContent=showTex?'Texture ●':'Texture';
+  btn.className=showTex?'on':'sec';
+}
+
+function resetToDefaults() {
+  parts=JSON.parse(JSON.stringify(DEFAULTS));
+  Object.keys(texFromImg).forEach(k=>delete texFromImg[k]);
+  drawOrder=DEFAULT_DRAW_ORDER.slice();
+  jointOverrides={};
+  selected=null;
+  // Re-apply any already-loaded textures
+  Object.keys(DEFAULTS).forEach(function(name) {
+    const img=TEX_IMGS[name];
+    if (img&&img.complete&&img.naturalWidth>0) {
+      parts[name].w=img.naturalWidth/TEX_SCALE;
+      parts[name].h=img.naturalHeight/TEX_SCALE;
+      texFromImg[name]=true;
+    }
+  });
+  updateSidebar();
+}
+
+// ─── Config: apply, save, load ────────────────────────────────────────────────
+function applyConfig(cfg) {
+  if (!cfg) return;
+  if (cfg.parts) {
+    Object.keys(cfg.parts).forEach(function(name) {
+      const saved=cfg.parts[name];
+      if (!parts[name]) parts[name]=Object.assign({},DEFAULTS[name]||{},saved);
+      // Position always from config
+      if (saved.dx!=null) parts[name].dx=saved.dx;
+      if (saved.dy!=null) parts[name].dy=saved.dy;
+      // Size from config only if texture hasn't already set it
+      if (!texFromImg[name]) {
+        if (saved.w) parts[name].w=saved.w;
+        if (saved.h) parts[name].h=saved.h;
+      }
+    });
+  }
+  if (cfg.joints) Object.keys(cfg.joints).forEach(function(id) {
+    jointOverrides[id]=cfg.joints[id];
+  });
+  if (cfg.drawOrder && Array.isArray(cfg.drawOrder)) {
+    const known=new Set(Object.keys(parts));
+    const loaded=cfg.drawOrder.filter(n=>known.has(n));
+    // Append any parts not in saved order
+    const rest=Object.keys(parts).filter(n=>!loaded.includes(n));
+    drawOrder=[...rest,...loaded.reverse()].reverse();
+    // Actually keep it simple: saved order IS the back-to-front order
+    drawOrder=cfg.drawOrder.filter(n=>known.has(n));
+    // Add any missing
+    Object.keys(parts).forEach(n=>{ if (!drawOrder.includes(n)) drawOrder.unshift(n); });
+  }
+  updateSidebar();
+}
+
+function saveConfig() {
+  const cfg={ parts:{}, drawOrder:drawOrder.slice() };
+  Object.keys(parts).forEach(function(name) {
+    const p=parts[name];
+    cfg.parts[name]={ w:r1(p.w), h:r1(p.h), dx:r1(p.dx), dy:r1(p.dy) };
+  });
+  const jkeys=Object.keys(jointOverrides).filter(id=>{
+    const ov=jointOverrides[id]; return ov&&(ov.pA||ov.pB);
+  });
+  if (jkeys.length) {
+    cfg.joints={};
+    jkeys.forEach(function(id) {
+      const ov=jointOverrides[id]; cfg.joints[id]={};
+      if (ov.pA) cfg.joints[id].pA=ov.pA.map(r1);
+      if (ov.pB) cfg.joints[id].pB=ov.pB.map(r1);
+    });
+  }
+  const a=document.createElement('a');
+  a.download='puppet_config.json';
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(cfg,null,2)],{type:'application/json'}));
+  a.click();
+}
+
+function triggerLoad() { document.getElementById('file-input').click(); }
+
+document.getElementById('file-input').addEventListener('change', function(e) {
+  const file=e.target.files[0]; if (!file) return;
+  const reader=new FileReader();
+  reader.onload=function(ev) {
+    try { applyConfig(JSON.parse(ev.target.result)); }
+    catch(err) { alert('Invalid JSON: '+err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value=''; // allow re-loading same file
+});
+
+// ─── Export ───────────────────────────────────────────────────────────────────
+function downloadLayout() {
+  const tmp=document.createElement('canvas'); tmp.width=CV_W; tmp.height=CV_H;
+  const tc=tmp.getContext('2d'); tc.fillStyle='#282828'; tc.fillRect(0,0,CV_W,CV_H);
+  render(tc,false);
+  const a=document.createElement('a'); a.download='puppet_layout.png';
+  a.href=tmp.toDataURL('image/png'); a.click();
+}
+
+function makeTemplatePNG(name) {
+  const p=parts[name], S=TEX_SCALE;
+  const W=Math.round(p.w)*S, H=Math.round(p.h)*S;
+  const tc=document.createElement('canvas'); tc.width=W; tc.height=H;
+  const c=tc.getContext('2d');
+  c.fillStyle='#ffffff'; c.fillRect(0,0,W,H);
+  c.fillStyle='rgba(190,215,235,0.35)'; c.fillRect(0,0,W,H);
+  c.strokeStyle='rgba(150,190,220,0.3)'; c.lineWidth=1;
+  for(let x=8*S;x<W;x+=8*S){c.beginPath();c.moveTo(x,0);c.lineTo(x,H);c.stroke();}
+  for(let y=8*S;y<H;y+=8*S){c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke();}
+  c.strokeStyle='rgba(100,150,200,0.45)'; c.setLineDash([6,6]);
+  c.beginPath();c.moveTo(W/2,0);c.lineTo(W/2,H);c.moveTo(0,H/2);c.lineTo(W,H/2);c.stroke();
+  c.setLineDash([]);
+  c.strokeStyle='#7aabcc'; c.lineWidth=2; c.strokeRect(1,1,W-2,H-2);
+  resolvedJoints().forEach(function(j) {
+    [[j.bA,j.pA],[j.bB,j.pB]].forEach(function(ep) {
+      if (ep[0]!==name) return;
+      const jx=W/2+ep[1][0]*S, jy=H/2+ep[1][1]*S;
+      c.beginPath(); c.arc(jx,jy,7,0,Math.PI*2);
+      c.fillStyle=j.c; c.fill(); c.strokeStyle='#fff'; c.lineWidth=1.5; c.stroke();
+      c.fillStyle=j.c; c.font='bold 11px monospace';
+      const lbl=j.id;
+      c.fillText(lbl, jx+(jx>W/2?-(c.measureText(lbl).width+12):12), jy+4);
+    });
+  });
+  c.fillStyle='rgba(30,70,120,0.7)';
+  c.font='bold 13px monospace'; c.fillText(name,6,17);
+  c.font='11px monospace'; c.fillText(`${Math.round(p.w)}×${Math.round(p.h)}px`,6,31);
+  return tc.toDataURL('image/png');
+}
+
+function downloadAllPNGs() {
+  Object.keys(parts).forEach(function(name,i) {
+    setTimeout(function() {
+      const a=document.createElement('a'); a.download=name+'.png';
+      a.href=makeTemplatePNG(name); a.click();
+    }, i*150);
+  });
+}
+
+// ─── Auto-load puppet_config.json on startup ──────────────────────────────────
+fetch('puppet_config.json')
+  .then(function(r){ return r.ok?r.json():null; })
+  .catch(function(){ return null; })
+  .then(applyConfig);
+</script>
+</body>
+</html>
